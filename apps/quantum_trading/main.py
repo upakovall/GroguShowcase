@@ -1,4 +1,4 @@
-﻿"""FinTech Quantum Terminal - Host Application.
+"""FinTech Quantum Terminal - Host Application.
 
 Demonstrates seamless integration of the decoupled Grogu Voice AI Copilot module
 into an entirely distinct architectural domain (Financial Trading & Risk Engine).
@@ -88,10 +88,20 @@ app.add_middleware(
 )
 
 # 4. Mount decoupled Grogu Copilot router
+llm_backend = os.getenv("LLM_BACKEND", "dynamic")
+llm_api_base = os.getenv("LLM_API_BASE", "http://localhost:8001/v1")
+llm_model_name = os.getenv("LLM_MODEL_NAME", "Qwen/Qwen2.5-7B-Instruct-AWQ")
+llm_api_key = os.getenv("LLM_API_KEY", None)
+
 copilot_router = create_copilot_router(
     registry=trader_mcp,
-    llm_backend="mock",
+    llm_backend=llm_backend,
+    llm_api_base=llm_api_base,
+    llm_api_key=llm_api_key,
+    model_name=llm_model_name,
     endpoint_path="/ws/copilot",
+    stt_model_size="base",
+    stt_device="cpu",
 )
 app.include_router(copilot_router)
 

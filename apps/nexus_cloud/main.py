@@ -44,10 +44,20 @@ def validate_node_scaling(action: UIAction, ctx: ViewContext):
 
 host_registry.register_action_validator(ActionType.SET_INPUT_VALUE.value, validate_node_scaling)
 
+import os
+
 # Mount the decoupled Grogu Copilot Router
+llm_backend = os.getenv("LLM_BACKEND", "dynamic")
+llm_api_base = os.getenv("LLM_API_BASE", "http://localhost:8001/v1")
+llm_model_name = os.getenv("LLM_MODEL_NAME", "Qwen/Qwen2.5-7B-Instruct-AWQ")
+llm_api_key = os.getenv("LLM_API_KEY", None)
+
 copilot_router = create_copilot_router(
     registry=host_registry,
-    llm_backend="dynamic",  # "dynamic", "vllm", "llama_cpp", "runpod"
+    llm_backend=llm_backend,
+    llm_api_base=llm_api_base,
+    llm_api_key=llm_api_key,
+    model_name=llm_model_name,
     endpoint_path="/ws/copilot",
     stt_model_size="base",
     stt_device="cpu",
