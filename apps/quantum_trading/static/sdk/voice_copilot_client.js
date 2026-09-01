@@ -54,7 +54,7 @@ export class VoiceCopilotClient {
         this.recognition = new SpeechRecognition();
         this.recognition.continuous = true;
         this.recognition.interimResults = true;
-        this.recognition.lang = navigator.language || 'ru-RU';
+        this.recognition.lang = 'ru-RU';
 
         this.recognition.onresult = (event) => {
           let interim = '';

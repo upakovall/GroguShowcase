@@ -52,6 +52,9 @@ llm_api_base = os.getenv("LLM_API_BASE", "http://localhost:8001/v1")
 llm_model_name = os.getenv("LLM_MODEL_NAME", "Qwen/Qwen2.5-7B-Instruct-AWQ")
 llm_api_key = os.getenv("LLM_API_KEY", None)
 
+stt_model_size = os.getenv("STT_MODEL_SIZE", "small")
+stt_device = os.getenv("STT_DEVICE", "cpu")
+
 copilot_router = create_copilot_router(
     registry=host_registry,
     llm_backend=llm_backend,
@@ -59,8 +62,8 @@ copilot_router = create_copilot_router(
     llm_api_key=llm_api_key,
     model_name=llm_model_name,
     endpoint_path="/ws/copilot",
-    stt_model_size="base",
-    stt_device="cpu",
+    stt_model_size=stt_model_size,
+    stt_device=stt_device,
 )
 app.include_router(copilot_router)
 
