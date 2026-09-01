@@ -74,51 +74,6 @@ async def health_check():
         "port": 8000
     }
 
-import sys
-quantum_dir = Path(__file__).resolve().parent.parent / "quantum_trading"
-if str(quantum_dir) not in sys.path:
-    sys.path.insert(0, str(quantum_dir))
-
-try:
-    from trading_service import TradingService
-    trading_service = TradingService()
-
-    def risk_policy_validator(action: UIAction, ctx: ViewContext):
-        if action.target_id == "trade_amount_input":
-            amount = float(action.payload.get("value", 0))
-            if amount > 50.0:
-                return False, "Risk Policy Alert: Single transaction limit is 50.0 units."
-        return True, None
-
-    host_registry.register_action_validator(ActionType.SET_INPUT_VALUE.value, risk_policy_validator)
-
-    def on_order_execute_hook(action: UIAction, ctx: ViewContext):
-        if action.target_id == "execute_trade_btn":
-            asset = ctx.state_summary.get("selected_asset", "BTC/USD")
-            order_type = ctx.state_summary.get("order_type", "MARKET_BUY")
-            amount = float(ctx.state_summary.get("trade_amount", 1.0))
-            leverage = int(ctx.state_summary.get("leverage", 1))
-            order = trading_service.execute_order(asset, order_type, amount, leverage)
-            return {"executed_order": order}
-        return None
-
-    host_registry.register_action_hook(ActionType.CLICK_BUTTON.value, on_order_execute_hook)
-
-    @app.get("/api/portfolio")
-    async def get_portfolio():
-        return {
-            "portfolio": trading_service.portfolio,
-            "orders": trading_service.active_orders,
-            "risk_settings": trading_service.risk_settings,
-        }
-except Exception as e:
-    logger.warning(f"Could not load trading service: {e}")
-
-# Mount Quantum Trading static directory under /trade
-QUANTUM_STATIC_DIR = Path(__file__).resolve().parent.parent / "quantum_trading" / "static"
-if QUANTUM_STATIC_DIR.exists():
-    app.mount("/trade", StaticFiles(directory=str(QUANTUM_STATIC_DIR), html=True), name="quantum_static")
-
 # Mount static frontend directory for Nexus Cloud
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
