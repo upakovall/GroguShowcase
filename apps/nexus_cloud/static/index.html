@@ -199,56 +199,14 @@
           <span class="ai-mode-pill">UI-Aware</span>
         </div>
 
-        <!-- Voice Interaction Hub -->
-        <div class="voice-hero-card">
-          <div class="waveform-container">
-            <canvas id="waveform_canvas" width="300" height="60"></canvas>
-          </div>
-
-          <div class="voice-controls">
-            <button id="mic_btn" class="mic-button" title="Click to Speak / Record Voice">
-              <div class="mic-inner">
-                <span id="mic_icon" class="mic-glyph">🎙️</span>
-              </div>
-              <span class="mic-ripple"></span>
-            </button>
-            <div class="voice-status-text">
-              <span id="voice_status_label">Tap mic to speak</span>
-              <small id="voice_sub_label">Or click a simulated prompt below</small>
-            </div>
-          </div>
-
-          <!-- Quick Simulated Voice Commands for Automated & Manual Testing -->
-          <div class="simulated-prompts">
-            <span class="sim-label">⚡ Simulated Voice Commands:</span>
-            <div class="prompt-chips">
-              <button class="chip-btn" data-command="Filter servers to show only active instances">
-                "Filter servers to active"
-              </button>
-              <button class="chip-btn" data-command="Switch to dark mode and scale worker nodes to 5">
-                "Dark mode & scale nodes to 5"
-              </button>
-              <button class="chip-btn" data-command="Open deployment configuration modal">
-                "Open deploy modal"
-              </button>
-              <button class="chip-btn" data-command="Filter unhealthy servers and switch region to eu-central">
-                "Show unhealthy & switch EU"
-              </button>
-              <button class="chip-btn" data-command="Reset all filters">
-                "Reset all filters"
-              </button>
-            </div>
-          </div>
-
-          <!-- Manual Text Fallback Prompt Input -->
-          <form id="text_prompt_form" class="text-prompt-form">
-            <input type="text" id="text_prompt_input" placeholder="Type voice command fallback..." autocomplete="off">
-            <button type="submit" id="send_prompt_btn" class="btn-send" title="Send Command">→</button>
-          </form>
-        </div>
-
-        <!-- Interactive Chat History Container -->
+        <!-- Unified Interactive Chat Stream Container -->
         <div class="chat-stream-container">
+          <!-- Mini Waveform Visualizer Bar -->
+          <div class="waveform-container mini">
+            <canvas id="waveform_canvas" width="300" height="36"></canvas>
+          </div>
+
+          <!-- Scrollable Messages Feed -->
           <div class="chat-stream-messages" id="chat_stream_messages">
             <div class="chat-stream-msg assistant">
               <div class="chat-msg-header">✨ Grogu AI Copilot <small style="opacity:0.6;">System Ready</small></div>
@@ -257,6 +215,37 @@
               </div>
             </div>
           </div>
+
+          <!-- Quick Simulated Voice Commands -->
+          <div class="simulated-prompts compact">
+            <div class="prompt-chips">
+              <button class="chip-btn" data-command="Filter servers to show only active instances">
+                "Filter active"
+              </button>
+              <button class="chip-btn" data-command="Switch to dark mode and scale worker nodes to 5">
+                "Dark & 5 nodes"
+              </button>
+              <button class="chip-btn" data-command="Open deployment configuration modal">
+                "Deploy modal"
+              </button>
+              <button class="chip-btn" data-command="Reset all filters">
+                "Reset filters"
+              </button>
+            </div>
+          </div>
+
+          <!-- Integrated Mic & Text Prompt Input Bar -->
+          <form id="text_prompt_form" class="chat-stream-input-bar">
+            <button type="button" id="mic_btn" class="chat-mic-btn" title="Click to Speak / Record (16kHz PCM)">
+              <span id="mic_icon">🎙️</span>
+            </button>
+            <input type="text" id="text_prompt_input" class="chat-text-input" placeholder="Speak or type command..." autocomplete="off">
+            <button type="submit" id="send_prompt_btn" class="btn btn-primary btn-sm" style="padding: 0.45rem 0.75rem;">Send</button>
+          </form>
+        </div>
+
+        <div class="voice-status-text" style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">
+          <span id="voice_status_label">Tap microphone to speak (16kHz PCM)</span>
         </div>
 
         <!-- Declarative ViewContext Live Inspector Toggle -->

@@ -97,8 +97,13 @@ export class VoiceCopilotClient {
 
       this.ws.onopen = () => {
         this.isConnected = true;
+        this.reconnectAttempts = 0;
         console.log('[VoiceCopilotClient] Connected successfully.');
         this.onStateChange('connected');
+        this._startHeartbeat();
+        if (this.lastContext) {
+          this.syncViewContext(this.lastContext);
+        }
       };
 
       this.ws.onmessage = (event) => {
@@ -114,18 +119,50 @@ export class VoiceCopilotClient {
 
       this.ws.onclose = () => {
         this.isConnected = false;
-        console.log('[VoiceCopilotClient] Connection closed.');
+        this._stopHeartbeat();
+        console.warn('[VoiceCopilotClient] Connection closed. Scheduling reconnect...');
         this.onStateChange('disconnected');
+        this._scheduleReconnect();
       };
 
       this.ws.onerror = (err) => {
         console.error('[VoiceCopilotClient] WS error:', err);
+        this.isConnected = false;
+        this._stopHeartbeat();
         this.onError(err);
       };
     } catch (e) {
       console.error('[VoiceCopilotClient] Connection failed:', e);
+      this._scheduleReconnect();
       this.onError(e);
     }
+  }
+
+  _startHeartbeat() {
+    this._stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({ type: 'PING' }));
+      }
+    }, 20000);
+  }
+
+  _stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+  }
+
+  _scheduleReconnect() {
+    if (this.reconnectAttempts >= 30) {
+      console.warn('[VoiceCopilotClient] Max reconnect attempts reached.');
+      return;
+    }
+    const delay = Math.min(1000 * Math.pow(1.4, this.reconnectAttempts), 8000);
+    this.reconnectAttempts = (this.reconnectAttempts || 0) + 1;
+    console.log(`[VoiceCopilotClient] Reconnecting in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts})...`);
+    setTimeout(() => this.connect(), delay);
   }
 
   _handleMessage(msg) {
