@@ -1,0 +1,19 @@
+[project]
+name = "grogu-showcase"
+version = "0.1.0"
+description = "Multi-application showcase suite demonstrating Grogu Voice AI Copilot"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "websockets>=12.0",
+    "numpy>=1.24.0",
+    "grogu-copilot",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
