@@ -16,11 +16,11 @@ BASE_DIR = Path(__file__).resolve().parent
 
 def run():
     print("=" * 70)
-    print(" 🚀 Starting Grogu Voice AI Copilot Multi-Application Showcase")
+    print(" [GROGU SHOWCASE] Starting Voice AI Copilot Multi-Application Hub")
     print("=" * 70)
-    print(" • App 1: Nexus Cloud Studio     -> http://127.0.0.1:8000")
-    print(" • App 2: Quantum Trade Terminal -> http://127.0.0.1:8050")
-    print(" • Core Engine: grogu-copilot (Installed as standalone package)")
+    print(" * App 1: Nexus Cloud Studio     -> http://127.0.0.1:8000")
+    print(" * App 2: Quantum Trade Terminal -> http://127.0.0.1:8050")
+    print(" * Core Engine: grogu-copilot (Installed as standalone package)")
     print("=" * 70)
 
     nexus_script = BASE_DIR / "apps" / "nexus_cloud" / "main.py"
