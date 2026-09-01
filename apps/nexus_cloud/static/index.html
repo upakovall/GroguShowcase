@@ -247,40 +247,15 @@
           </form>
         </div>
 
-        <!-- Live STT Transcription Box -->
-        <div class="hud-box">
-          <div class="hud-box-header">
-            <span class="box-tag tag-stt">STT TRANSCRIPT</span>
-            <span id="stt_status_tag" class="status-tag">Ready</span>
-          </div>
-          <div class="stt-transcript-content" id="stt_transcript_text">
-            <em>Awaiting voice input...</em>
-          </div>
-        </div>
-
-        <!-- Agent Reasoning & Thoughts Box -->
-        <div class="hud-box">
-          <div class="hud-box-header">
-            <span class="box-tag tag-llm">AGENT REASONING</span>
-            <span class="status-tag">Pydantic Guided</span>
-          </div>
-          <div class="reasoning-content" id="agent_thought_text">
-            <em>Agent reasoning chain will appear here...</em>
-          </div>
-          <div class="spoken-speech-box" id="speech_output_container" style="display: none;">
-            <span class="speech-label">🔊 Spoken Output:</span>
-            <p id="speech_output_text"></p>
-          </div>
-        </div>
-
-        <!-- Structured Action Execution Stream -->
-        <div class="hud-box flex-grow">
-          <div class="hud-box-header">
-            <span class="box-tag tag-action">UI ACTIONS STREAM</span>
-            <span class="status-tag" id="action_count_tag">0 actions</span>
-          </div>
-          <div class="action-feed" id="action_feed_list">
-            <div class="empty-feed">No actions executed yet.</div>
+        <!-- Interactive Chat History Container -->
+        <div class="chat-stream-container">
+          <div class="chat-stream-messages" id="chat_stream_messages">
+            <div class="chat-stream-msg assistant">
+              <div class="chat-msg-header">✨ Grogu AI Copilot <small style="opacity:0.6;">System Ready</small></div>
+              <div class="chat-bubble-ai">
+                Hello! I am your Voice AI DevOps Copilot. You can speak commands in English, Ukrainian, or Russian, or click a quick prompt chip.
+              </div>
+            </div>
           </div>
         </div>
 

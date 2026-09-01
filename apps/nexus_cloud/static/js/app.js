@@ -263,6 +263,7 @@ class App {
       const input = document.getElementById('text_prompt_input');
       const text = input?.value.trim();
       if (text) {
+        this.appendChatMessage('user', text);
         this.submitTextPrompt(text);
         input.value = '';
       }
@@ -274,38 +275,67 @@ class App {
     });
   }
 
+  appendChatMessage(role, text, thought = null, actions = []) {
+    const feed = document.getElementById('chat_stream_messages');
+    if (!feed) return;
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-stream-msg ${role}`;
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const sender = role === 'user' ? '👤 You' : '✨ Grogu AI Copilot';
+
+    let actionsHtml = '';
+    if (actions && actions.length > 0) {
+      actionsHtml = '<div class="chat-action-pills">' + actions.map(a => `<span class="chat-action-pill">⚡ ${a.action_type}: ${a.description}</span>`).join('') + '</div>';
+    }
+
+    let thoughtHtml = '';
+    if (thought) {
+      thoughtHtml = `<details class="chat-thought-accordion"><summary>🧠 Reasoning Thought Process</summary><p style="margin-top:0.3rem; font-family:var(--font-mono);">${thought}</p></details>`;
+    }
+
+    const bubbleClass = role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai';
+
+    msgDiv.innerHTML = `
+      <div class="chat-msg-header">${sender} <small style="opacity:0.6;">${timeStr}</small></div>
+      <div class="${bubbleClass}">
+        <div>${text}</div>
+        ${thoughtHtml}
+        ${actionsHtml}
+      </div>
+    `;
+
+    feed.appendChild(msgDiv);
+    feed.scrollTop = feed.scrollHeight;
+  }
+
   setupWebSocket() {
     this.ws.on('open', () => {
       this.syncViewContext();
     });
 
     this.ws.on('TRANSCRIPTION', (msg) => {
-      const el = document.getElementById('stt_transcript_text');
-      const tag = document.getElementById('stt_status_tag');
-      if (el) el.textContent = `"${msg.text}"`;
-      if (tag) tag.textContent = msg.is_final ? 'Finalized' : 'Recognizing...';
+      if (msg.is_final && msg.text) {
+        this.appendChatMessage('user', msg.text);
+      }
     });
 
     this.ws.on('AGENT_THINKING', (msg) => {
-      const el = document.getElementById('agent_thought_text');
-      if (el && msg.text) el.innerHTML = `<em>${msg.text}</em>`;
+      const statusLabel = document.getElementById('voice_status_label');
+      if (statusLabel && msg.text) {
+        statusLabel.textContent = msg.text;
+      }
     });
 
     this.ws.on('AGENT_RESPONSE', (msg) => {
       const resp = msg.agent_response;
       if (!resp) return;
 
-      // Update Reasoning Box
-      const thoughtEl = document.getElementById('agent_thought_text');
-      if (thoughtEl) thoughtEl.textContent = resp.thought;
+      // Append assistant bubble to Chat Stream
+      this.appendChatMessage('assistant', resp.speech_output || 'Command processed.', resp.thought, resp.actions);
 
-      // Update Spoken Speech Box & Vocalize Natural Human Voice
-      const speechCont = document.getElementById('speech_output_container');
-      const speechText = document.getElementById('speech_output_text');
-      if (speechCont && speechText) {
-        speechCont.style.display = 'block';
-        speechText.textContent = resp.speech_output;
-      }
+      // Vocalize Natural Human Voice
       if (resp.speech_output) {
         this.audio.speakNaturalVoice(resp.speech_output);
       }

@@ -133,41 +133,38 @@
       <!-- Right Panel: Voice AI Copilot HUD -->
       <aside class="hud-panel">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3>🎙️ Voice Trader Copilot</h3>
+          <h3>🎙️ Voice AI Copilot Chat</h3>
           <span id="ws_badge" style="font-size: 0.7rem; color: var(--cyan);">Connecting...</span>
         </div>
 
-        <div class="mic-hero">
-          <button id="mic_btn" class="mic-btn-circle" title="Click to Speak">🎙️</button>
-          <div id="mic_status_text" style="font-size: 0.8rem; font-weight: 600;">Tap mic to speak trading command</div>
-
-          <div class="chips">
-            <span style="font-size: 0.65rem; color: var(--text-dim); width: 100%;">⚡ Quick Voice Commands:</span>
-            <button class="chip" onclick="simulateVoice('Buy 2 Bitcoin with 5x leverage')">"Buy 2 Bitcoin 5x"</button>
-            <button class="chip" onclick="simulateVoice('Switch to Risk Management tab')">"Switch to Risk tab"</button>
-            <button class="chip" onclick="simulateVoice('Enable auto hedging and set stop loss to 8 percent')">"Auto hedge & 8% stop loss"</button>
-            <button class="chip" onclick="simulateVoice('Select Solana pair and set amount to 15')">"SOL pair & 15 size"</button>
-            <button class="chip" onclick="simulateVoice('Execute trade order')">"Execute trade order"</button>
+        <!-- Interactive Chat History Container -->
+        <div class="chat-feed-container">
+          <div class="chat-messages" id="chat_messages">
+            <div class="chat-msg assistant">
+              <div class="chat-sender">✨ Grogu AI Copilot</div>
+              <div class="chat-bubble">
+                Hello! I am your AI Voice Copilot. You can speak commands in English, Ukrainian, or Russian, or click a quick prompt below.
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div class="hud-box">
-          <span class="tag">STT Realtime Transcript</span>
-          <p id="stt_text" style="margin-top: 0.3rem; font-style: italic;">Awaiting voice command...</p>
-        </div>
-
-        <div class="hud-box">
-          <span class="tag">Copilot Reasoning & Speech</span>
-          <p id="reasoning_text" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); margin-top: 0.3rem;">Reasoning chain...</p>
-          <p id="speech_text" style="color: var(--green); margin-top: 0.4rem; font-weight: 600;"></p>
-        </div>
-
-        <div class="hud-box">
-          <span class="tag">Dynamic UIActions Stream</span>
-          <div id="action_log" style="font-family: var(--font-mono); font-size: 0.7rem; margin-top: 0.3rem; max-height: 120px; overflow-y: auto;">
-            No actions executed yet.
+          <!-- Quick Prompts Chips -->
+          <div class="chips" style="padding: 0.4rem 0.6rem; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2);">
+            <button class="chip" onclick="simulateVoice('Buy 2 Bitcoin with 5x leverage')">"Buy 2 BTC 5x"</button>
+            <button class="chip" onclick="simulateVoice('Switch to Risk tab')">"Risk tab"</button>
+            <button class="chip" onclick="simulateVoice('Enable auto hedging and set stop loss to 8 percent')">"8% stop loss"</button>
+            <button class="chip" onclick="simulateVoice('Select Solana pair and set amount to 15')">"SOL & 15 size"</button>
           </div>
+
+          <!-- Bottom Input & Mic Bar -->
+          <form id="chat_input_form" class="chat-input-bar" onsubmit="handleTextInput(event)">
+            <button type="button" id="mic_btn" class="mic-btn-circle" style="width: 36px; height: 36px; font-size: 1rem;" title="Hold to Speak (16kHz PCM)">🎙️</button>
+            <input type="text" id="chat_text_input" class="chat-text-input" placeholder="Speak or type command..." autocomplete="off">
+            <button type="submit" class="tab-btn" style="padding: 0.4rem 0.8rem; background: var(--green); color: #000; font-weight: 700;">Send</button>
+          </form>
         </div>
+
+        <div id="mic_status_text" style="font-size: 0.75rem; color: var(--text-dim); text-align: center; margin-top: 0.2rem;">Tap mic to speak voice command</div>
       </aside>
 
     </main>
@@ -312,26 +309,65 @@
       };
     }
 
-    // Initialize Decoupled VoiceCopilotClient SDK
+    function appendChatMessage(role, text, thought = null, actions = []) {
+      const feed = document.getElementById('chat_messages');
+      if (!feed) return;
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `chat-msg ${role}`;
+
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const sender = role === 'user' ? '👤 You' : '✨ Grogu Copilot';
+
+      let actionsHtml = '';
+      if (actions && actions.length > 0) {
+        actionsHtml = '<div class="chat-actions-list">' + actions.map(a => `<span class="chat-action-badge">⚡ ${a.action_type}: ${a.description}</span>`).join('') + '</div>';
+      }
+
+      let thoughtHtml = '';
+      if (thought) {
+        thoughtHtml = `<details class="chat-reasoning-toggle"><summary>🧠 Thought Process</summary><p style="margin-top:0.3rem; font-family:var(--font-mono);">${thought}</p></details>`;
+      }
+
+      msgDiv.innerHTML = `
+        <div class="chat-sender">${sender} <small style="opacity:0.6;">${timeStr}</small></div>
+        <div class="chat-bubble">
+          <div>${text}</div>
+          ${thoughtHtml}
+          ${actionsHtml}
+        </div>
+      `;
+
+      feed.appendChild(msgDiv);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    // Initialize Decoupled VoiceCopilotClient SDK with auto-protocol WSS / WS
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const copilot = new VoiceCopilotClient({
-      wsUrl: `ws://${window.location.host}/ws/copilot`,
+      wsUrl: `${proto}//${window.location.host}/ws/copilot`,
       onStateChange: (state) => {
-        document.getElementById('ws_badge').textContent = state === 'connected' ? '⚡ WS Connected' : state;
+        const badge = document.getElementById('ws_badge');
+        if (badge) {
+          badge.textContent = state === 'connected' ? '⚡ WS Connected' : state;
+          badge.style.color = state === 'connected' ? 'var(--green)' : 'var(--cyan)';
+        }
       },
       onTranscription: (text, isFinal) => {
-        document.getElementById('stt_text').textContent = `"${text}"`;
+        if (isFinal && text) {
+          appendChatMessage('user', text);
+        }
       },
       onAgentThinking: (text) => {
-        document.getElementById('reasoning_text').textContent = text;
+        const status = document.getElementById('mic_status_text');
+        if (status) status.textContent = `Thinking: ${text}`;
       },
       onAgentResponse: (resp) => {
-        document.getElementById('reasoning_text').textContent = resp.thought;
-        document.getElementById('speech_text').textContent = `🔊 ${resp.speech_output}`;
+        appendChatMessage('assistant', resp.speech_output || 'Command executed.', resp.thought, resp.actions);
+        const status = document.getElementById('mic_status_text');
+        if (status) status.textContent = 'Ready for next voice or text command';
       },
       onUIAction: (action) => {
-        const log = document.getElementById('action_log');
-        log.innerHTML = `<div>⚡ <strong>${action.action_type}</strong> on #${action.target_id} (${action.description})</div>` + log.innerHTML;
-
         // Apply mutations independently on host UI:
         if (action.target_id === 'asset_select') {
           document.getElementById('asset_select').value = action.payload.value;
@@ -411,21 +447,31 @@
       window.confirmOrder();
     });
 
+    window.handleTextInput = function(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('chat_text_input');
+      const text = input?.value.trim();
+      if (!text) return;
+      input.value = '';
+      appendChatMessage('user', text);
+      copilot.sendTextPrompt(text);
+    };
+
     // Mic button
     document.getElementById('mic_btn').addEventListener('click', async () => {
       if (copilot.isRecording) {
         copilot.stopListening();
         document.getElementById('mic_btn').classList.remove('recording');
-        document.getElementById('mic_status_text').textContent = 'Processing voice...';
+        document.getElementById('mic_status_text').textContent = 'Processing voice audio...';
       } else {
         await copilot.startListening();
         document.getElementById('mic_btn').classList.add('recording');
-        document.getElementById('mic_status_text').textContent = 'Listening (16kHz PCM)... Tap to send';
+        document.getElementById('mic_status_text').textContent = 'Listening (16kHz PCM)... Click to send';
       }
     });
 
     window.simulateVoice = function(text) {
-      document.getElementById('stt_text').textContent = `"${text}" (Simulating...)`;
+      appendChatMessage('user', text);
       copilot.stopListening(text);
     };
   </script>
