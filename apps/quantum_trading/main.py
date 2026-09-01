@@ -124,4 +124,6 @@ if __name__ == "__main__":
     # Fix utf-8 output encoding for Windows
     if sys.platform == "win32":
         sys.stdout.reconfigure(encoding="utf-8")
-    uvicorn.run(app, host="127.0.0.1", port=8050)
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8050"))
+    uvicorn.run(app, host=host, port=port)

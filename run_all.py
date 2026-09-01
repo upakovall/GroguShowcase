@@ -26,8 +26,10 @@ def run():
     nexus_script = BASE_DIR / "apps" / "nexus_cloud" / "main.py"
     quantum_script = BASE_DIR / "apps" / "quantum_trading" / "main.py"
 
-    p1 = subprocess.Popen([sys.executable, str(nexus_script)], cwd=str(nexus_script.parent))
-    p2 = subprocess.Popen([sys.executable, str(quantum_script)], cwd=str(quantum_script.parent))
+    import os
+
+    p1 = subprocess.Popen([sys.executable, str(nexus_script)], cwd=str(nexus_script.parent), env=os.environ.copy())
+    p2 = subprocess.Popen([sys.executable, str(quantum_script)], cwd=str(quantum_script.parent), env=os.environ.copy())
 
     print("\n[INFO] Both servers are running. Press CTRL+C to terminate both.\n")
 
