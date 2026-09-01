@@ -1,0 +1,433 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quantum Trade Terminal // Powered by Grogu Voice Copilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/trading.css">
+</head>
+<body>
+  <div class="terminal-container">
+    
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="logo-section">
+        <h2>QUANTUM<span>TRADE</span></h2>
+        <span class="quantum-badge">FINTECH V2.0</span>
+      </div>
+
+      <div class="tickers-bar">
+        <div class="ticker-item"><span>BTC/USD:</span> <strong class="ticker-up">$64,280 (+3.4%)</strong></div>
+        <div class="ticker-item"><span>ETH/USD:</span> <strong class="ticker-up">$3,480 (+2.1%)</strong></div>
+        <div class="ticker-item"><span>SOL/USD:</span> <strong class="ticker-up">$184.5 (+5.8%)</strong></div>
+      </div>
+
+      <div class="portfolio-pill">
+        Portfolio: <strong id="balance_display">$384,500 USD</strong>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="main-grid">
+      
+      <!-- Left Panel: Multi-Tab Trading Desk -->
+      <section class="trading-panel">
+        
+        <!-- Tab Switcher -->
+        <div class="tabs-header">
+          <button id="tab_trade_btn" class="tab-btn active" onclick="switchTab('trade')">⚡ Trade Terminal</button>
+          <button id="tab_risk_btn" class="tab-btn" onclick="switchTab('risk')">🛡️ Risk & Hedging</button>
+        </div>
+
+        <!-- TAB 1: Trade Terminal -->
+        <div id="tab_trade_content" class="card">
+          <h3>Spot & Margin Order Execution</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="asset_select">Trading Pair</label>
+              <select id="asset_select" class="form-ctrl">
+                <option value="BTC/USD">BTC/USD (Bitcoin)</option>
+                <option value="ETH/USD">ETH/USD (Ethereum)</option>
+                <option value="SOL/USD">SOL/USD (Solana)</option>
+                <option value="NVDA">NVDA (NVIDIA Tokenized)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="order_type_select">Order Type</label>
+              <select id="order_type_select" class="form-ctrl">
+                <option value="MARKET_BUY">Market Buy</option>
+                <option value="LIMIT_BUY">Limit Buy</option>
+                <option value="MARKET_SELL">Market Sell</option>
+                <option value="STOP_LIMIT">Stop Limit</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="trade_amount_input">Order Size / Amount</label>
+              <input type="number" id="trade_amount_input" class="form-ctrl" value="1.5" step="0.1" min="0.1" max="50">
+            </div>
+
+            <div class="form-group">
+              <label for="leverage_input">Margin Leverage</label>
+              <select id="leverage_input" class="form-ctrl">
+                <option value="1">1x (Spot)</option>
+                <option value="2">2x Leverage</option>
+                <option value="5" selected>5x Leverage</option>
+                <option value="10">10x Max</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+            <button id="execute_trade_btn" class="btn-buy" style="flex: 1;">⚡ Execute Trade Order</button>
+            <button id="open_order_modal_btn" class="tab-btn" style="border: 1px solid var(--border);">📋 Review Order</button>
+          </div>
+        </div>
+
+        <!-- TAB 2: Risk Management -->
+        <div id="tab_risk_content" class="card" style="display: none;">
+          <h3>Portfolio Risk Controls</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="stop_loss_input">Global Stop Loss (%)</label>
+              <input type="number" id="stop_loss_input" class="form-ctrl" value="5.0" min="1" max="25">
+            </div>
+
+            <div class="form-group">
+              <label for="auto_hedging_switch">Auto-Hedging Protection</label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem;">
+                <input type="checkbox" id="auto_hedging_switch" checked style="width: 20px; height: 20px;">
+                <span id="auto_hedging_label" style="font-size: 0.85rem; color: var(--green);">Active (Hedging Enabled)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Order Book Table -->
+        <div class="card">
+          <h3>Active Order Book</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Pair</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Leverage</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="orders_tbody">
+              <tr><td>ORD-9021</td><td>BTC/USD</td><td>LIMIT_BUY</td><td>0.5</td><td>1x</td><td style="color:var(--cyan)">OPEN</td></tr>
+              <tr><td>ORD-9022</td><td>ETH/USD</td><td>MARKET_BUY</td><td>4.0</td><td>5x</td><td style="color:var(--green)">FILLED</td></tr>
+              <tr><td>ORD-9023</td><td>SOL/USD</td><td>LIMIT_SELL</td><td>25.0</td><td>2x</td><td style="color:var(--cyan)">OPEN</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+      <!-- Right Panel: Voice AI Copilot HUD -->
+      <aside class="hud-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3>🎙️ Voice Trader Copilot</h3>
+          <span id="ws_badge" style="font-size: 0.7rem; color: var(--cyan);">Connecting...</span>
+        </div>
+
+        <div class="mic-hero">
+          <button id="mic_btn" class="mic-btn-circle" title="Click to Speak">🎙️</button>
+          <div id="mic_status_text" style="font-size: 0.8rem; font-weight: 600;">Tap mic to speak trading command</div>
+
+          <div class="chips">
+            <span style="font-size: 0.65rem; color: var(--text-dim); width: 100%;">⚡ Quick Voice Commands:</span>
+            <button class="chip" onclick="simulateVoice('Buy 2 Bitcoin with 5x leverage')">"Buy 2 Bitcoin 5x"</button>
+            <button class="chip" onclick="simulateVoice('Switch to Risk Management tab')">"Switch to Risk tab"</button>
+            <button class="chip" onclick="simulateVoice('Enable auto hedging and set stop loss to 8 percent')">"Auto hedge & 8% stop loss"</button>
+            <button class="chip" onclick="simulateVoice('Select Solana pair and set amount to 15')">"SOL pair & 15 size"</button>
+            <button class="chip" onclick="simulateVoice('Execute trade order')">"Execute trade order"</button>
+          </div>
+        </div>
+
+        <div class="hud-box">
+          <span class="tag">STT Realtime Transcript</span>
+          <p id="stt_text" style="margin-top: 0.3rem; font-style: italic;">Awaiting voice command...</p>
+        </div>
+
+        <div class="hud-box">
+          <span class="tag">Copilot Reasoning & Speech</span>
+          <p id="reasoning_text" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); margin-top: 0.3rem;">Reasoning chain...</p>
+          <p id="speech_text" style="color: var(--green); margin-top: 0.4rem; font-weight: 600;"></p>
+        </div>
+
+        <div class="hud-box">
+          <span class="tag">Dynamic UIActions Stream</span>
+          <div id="action_log" style="font-family: var(--font-mono); font-size: 0.7rem; margin-top: 0.3rem; max-height: 120px; overflow-y: auto;">
+            No actions executed yet.
+          </div>
+        </div>
+      </aside>
+
+    </main>
+
+    <!-- Order Review Modal -->
+    <div id="order_modal" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
+        <h3>⚡ Confirm Order Execution</h3>
+        <p id="modal_order_summary" style="font-family: var(--font-mono); font-size: 0.85rem;"></p>
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+          <button id="modal_close_btn" class="tab-btn" onclick="closeOrderModal()">Cancel</button>
+          <button id="modal_confirm_btn" class="btn-buy" onclick="confirmOrder()">Confirm & Dispatch</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Audio Player for TTS Playback -->
+  <audio id="tts_player"></audio>
+
+  <!-- ES6 Module using decoupled VoiceCopilotClient SDK -->
+  <script type="module">
+    import { VoiceCopilotClient } from '/sdk/voice_copilot_client.js';
+
+    let currentTab = 'trade';
+
+    window.switchTab = function(tab) {
+      currentTab = tab;
+      document.getElementById('tab_trade_btn').className = tab === 'trade' ? 'tab-btn active' : 'tab-btn';
+      document.getElementById('tab_risk_btn').className = tab === 'risk' ? 'tab-btn active' : 'tab-btn';
+      document.getElementById('tab_trade_content').style.display = tab === 'trade' ? 'block' : 'none';
+      document.getElementById('tab_risk_content').style.display = tab === 'risk' ? 'block' : 'none';
+      syncState();
+    };
+
+    window.closeOrderModal = function() {
+      document.getElementById('order_modal').style.display = 'none';
+      syncState();
+    };
+
+    window.confirmOrder = function() {
+      const asset = document.getElementById('asset_select').value;
+      const type = document.getElementById('order_type_select').value;
+      const amt = document.getElementById('trade_amount_input').value;
+      const lev = document.getElementById('leverage_input').value;
+      
+      const tbody = document.getElementById('orders_tbody');
+      const tr = document.createElement('tr');
+      const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+      tr.innerHTML = `<td>${orderId}</td><td>${asset}</td><td>${type}</td><td>${amt}</td><td>${lev}x</td><td style="color:var(--green)">FILLED</td>`;
+      tbody.prepend(tr);
+
+      window.closeOrderModal();
+    };
+
+    function generateViewContext() {
+      const isModalOpen = document.getElementById('order_modal').style.display === 'flex';
+      return {
+        screen_id: `fintech_terminal_${currentTab}`,
+        title: 'Quantum Trade Terminal',
+        active_modal: isModalOpen ? 'order_modal' : null,
+        components: [
+          {
+            id: 'tab_trade_btn',
+            type: 'button',
+            label: 'Trade Terminal Tab',
+            allowed_actions: ['click', 'navigate']
+          },
+          {
+            id: 'tab_risk_btn',
+            type: 'button',
+            label: 'Risk Management Tab',
+            allowed_actions: ['click', 'navigate']
+          },
+          {
+            id: 'asset_select',
+            type: 'select',
+            label: 'Trading Asset Pair',
+            value: document.getElementById('asset_select').value,
+            options: ['BTC/USD', 'ETH/USD', 'SOL/USD', 'NVDA'],
+            allowed_actions: ['select_option', 'set_value']
+          },
+          {
+            id: 'order_type_select',
+            type: 'select',
+            label: 'Order Type Selection',
+            value: document.getElementById('order_type_select').value,
+            options: ['MARKET_BUY', 'LIMIT_BUY', 'MARKET_SELL', 'STOP_LIMIT'],
+            allowed_actions: ['select_option', 'set_value']
+          },
+          {
+            id: 'trade_amount_input',
+            type: 'input',
+            label: 'Order Size Amount',
+            value: parseFloat(document.getElementById('trade_amount_input').value),
+            allowed_actions: ['set_value']
+          },
+          {
+            id: 'leverage_input',
+            type: 'select',
+            label: 'Margin Leverage Multiplier',
+            value: document.getElementById('leverage_input').value,
+            options: ['1', '2', '5', '10'],
+            allowed_actions: ['select_option', 'set_value']
+          },
+          {
+            id: 'execute_trade_btn',
+            type: 'button',
+            label: 'Execute Trade Order Button',
+            allowed_actions: ['click']
+          },
+          {
+            id: 'order_modal',
+            type: 'modal',
+            label: 'Order Confirmation Review Modal',
+            allowed_actions: ['open_modal', 'close_modal']
+          },
+          {
+            id: 'stop_loss_input',
+            type: 'input',
+            label: 'Stop Loss Percentage',
+            value: parseFloat(document.getElementById('stop_loss_input').value),
+            allowed_actions: ['set_value']
+          },
+          {
+            id: 'auto_hedging_switch',
+            type: 'switch',
+            label: 'Auto Hedging Protection Switch',
+            value: document.getElementById('auto_hedging_switch').checked,
+            allowed_actions: ['toggle', 'click']
+          }
+        ],
+        state_summary: {
+          current_tab: currentTab,
+          selected_asset: document.getElementById('asset_select').value,
+          order_type: document.getElementById('order_type_select').value,
+          trade_amount: parseFloat(document.getElementById('trade_amount_input').value),
+          leverage: parseInt(document.getElementById('leverage_input').value, 10),
+          auto_hedging: document.getElementById('auto_hedging_switch').checked,
+        }
+      };
+    }
+
+    // Initialize Decoupled VoiceCopilotClient SDK
+    const copilot = new VoiceCopilotClient({
+      wsUrl: `ws://${window.location.host}/ws/copilot`,
+      onStateChange: (state) => {
+        document.getElementById('ws_badge').textContent = state === 'connected' ? '⚡ WS Connected' : state;
+      },
+      onTranscription: (text, isFinal) => {
+        document.getElementById('stt_text').textContent = `"${text}"`;
+      },
+      onAgentThinking: (text) => {
+        document.getElementById('reasoning_text').textContent = text;
+      },
+      onAgentResponse: (resp) => {
+        document.getElementById('reasoning_text').textContent = resp.thought;
+        document.getElementById('speech_text').textContent = `🔊 ${resp.speech_output}`;
+      },
+      onUIAction: (action) => {
+        const log = document.getElementById('action_log');
+        log.innerHTML = `<div>⚡ <strong>${action.action_type}</strong> on #${action.target_id} (${action.description})</div>` + log.innerHTML;
+
+        // Apply mutations independently on host UI:
+        if (action.target_id === 'asset_select') {
+          document.getElementById('asset_select').value = action.payload.value;
+        }
+        if (action.target_id === 'order_type_select') {
+          document.getElementById('order_type_select').value = action.payload.value;
+        }
+        if (action.target_id === 'trade_amount_input') {
+          document.getElementById('trade_amount_input').value = action.payload.value;
+        }
+        if (action.target_id === 'leverage_input') {
+          document.getElementById('leverage_input').value = action.payload.value;
+        }
+        if (action.target_id === 'stop_loss_input') {
+          document.getElementById('stop_loss_input').value = action.payload.value;
+        }
+        if (action.target_id === 'auto_hedging_switch') {
+          const chk = document.getElementById('auto_hedging_switch');
+          chk.checked = action.payload.state !== undefined ? action.payload.state : !chk.checked;
+          document.getElementById('auto_hedging_label').textContent = chk.checked ? 'Active (Hedging Enabled)' : 'Disabled';
+        }
+        if (action.target_id === 'tab_trade_btn') {
+          window.switchTab('trade');
+        }
+        if (action.target_id === 'tab_risk_btn') {
+          window.switchTab('risk');
+        }
+        if (action.target_id === 'order_modal' || action.action_type === 'OPEN_MODAL') {
+          const modal = document.getElementById('order_modal');
+          modal.style.display = 'flex';
+          const asset = document.getElementById('asset_select').value;
+          const type = document.getElementById('order_type_select').value;
+          const amt = document.getElementById('trade_amount_input').value;
+          const lev = document.getElementById('leverage_input').value;
+          document.getElementById('modal_order_summary').textContent = `Order: ${type} ${amt} ${asset} at ${lev}x leverage`;
+        }
+        if (action.action_type === 'CLOSE_MODAL') {
+          window.closeOrderModal();
+        }
+        if (action.target_id === 'execute_trade_btn') {
+          window.confirmOrder();
+        }
+
+        syncState();
+      }
+    });
+
+    function syncState() {
+      copilot.syncViewContext(generateViewContext());
+    }
+
+    copilot.connect();
+    setTimeout(syncState, 400);
+
+    // Event listeners
+    document.getElementById('asset_select').addEventListener('change', syncState);
+    document.getElementById('order_type_select').addEventListener('change', syncState);
+    document.getElementById('trade_amount_input').addEventListener('change', syncState);
+    document.getElementById('leverage_input').addEventListener('change', syncState);
+    document.getElementById('stop_loss_input').addEventListener('change', syncState);
+    document.getElementById('auto_hedging_switch').addEventListener('change', (e) => {
+      document.getElementById('auto_hedging_label').textContent = e.target.checked ? 'Active (Hedging Enabled)' : 'Disabled';
+      syncState();
+    });
+
+    document.getElementById('open_order_modal_btn').addEventListener('click', () => {
+      document.getElementById('order_modal').style.display = 'flex';
+      const asset = document.getElementById('asset_select').value;
+      const type = document.getElementById('order_type_select').value;
+      const amt = document.getElementById('trade_amount_input').value;
+      const lev = document.getElementById('leverage_input').value;
+      document.getElementById('modal_order_summary').textContent = `Order: ${type} ${amt} ${asset} at ${lev}x leverage`;
+      syncState();
+    });
+
+    document.getElementById('execute_trade_btn').addEventListener('click', () => {
+      window.confirmOrder();
+    });
+
+    // Mic button
+    document.getElementById('mic_btn').addEventListener('click', async () => {
+      if (copilot.isRecording) {
+        copilot.stopListening();
+        document.getElementById('mic_btn').classList.remove('recording');
+        document.getElementById('mic_status_text').textContent = 'Processing voice...';
+      } else {
+        await copilot.startListening();
+        document.getElementById('mic_btn').classList.add('recording');
+        document.getElementById('mic_status_text').textContent = 'Listening (16kHz PCM)... Tap to send';
+      }
+    });
+
+    window.simulateVoice = function(text) {
+      document.getElementById('stt_text').textContent = `"${text}" (Simulating...)`;
+      copilot.stopListening(text);
+    };
+  </script>
+</body>
+</html>

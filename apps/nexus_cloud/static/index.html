@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Local, UI-Aware Voice AI Copilot for Web Platforms running on a 16GB VRAM budget with FastAPI and WebSockets.">
+  <title>Nexus Cloud Studio // Powered by Grogu Voice AI</title>
+  
+  <!-- Modern Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="theme-dark">
+  <div class="app-container">
+    
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="nav-brand">
+        <div class="logo-orb">
+          <div class="orb-core"></div>
+        </div>
+        <div class="brand-text">
+          <h1>NEXUS <span>CLOUD</span></h1>
+          <span class="sub-badge">POWERED BY GROGU VOICE AI</span>
+        </div>
+      </div>
+
+      <div class="nav-status-group">
+        <div class="vram-meter-pill" title="16GB GPU Memory Budget">
+          <span class="dot pulse-green"></span>
+          <span class="pill-label">VRAM Budget:</span>
+          <strong>11.9 / 16.0 GB (3.8GB Buffer)</strong>
+        </div>
+        
+        <div class="ws-status-pill" id="ws_status_badge">
+          <span class="dot dot-amber" id="ws_dot"></span>
+          <span id="ws_status_text">Connecting...</span>
+        </div>
+
+        <button id="theme_toggle" class="icon-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+          <span class="theme-icon" id="theme_icon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="main-layout">
+      
+      <!-- Left / Center: Interactive Cloud Platform Dashboard -->
+      <section class="dashboard-panel">
+        
+        <!-- Metrics Stats Row -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Active Worker Nodes</span>
+              <span class="stat-icon">⚡</span>
+            </div>
+            <div class="stat-value" id="stat_active_nodes">8 <span class="stat-sub">/ 12 max</span></div>
+            <div class="stat-footer text-success">↑ 99.98% Healthy Uptime</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">LLM Runtime Allocation</span>
+              <span class="stat-icon">🧠</span>
+            </div>
+            <div class="stat-value" id="stat_llm_alloc">5.2 <span class="stat-sub">GB VRAM</span></div>
+            <div class="stat-footer text-accent">+ 5.5 GB KV Cache (8K Context)</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">STT & TTS Engine</span>
+              <span class="stat-icon">🎙️</span>
+            </div>
+            <div class="stat-value" id="stat_stt_footprint">0.0 <span class="stat-sub">GB VRAM (CPU)</span></div>
+            <div class="stat-footer text-muted">faster-whisper int8 & PiperTTS</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Autoscaling Policy</span>
+              <span class="stat-icon">🔄</span>
+            </div>
+            <div class="stat-value" id="stat_autoscale_val">Enabled</div>
+            <div class="stat-footer text-success">Target CPU: 65%</div>
+          </div>
+        </div>
+
+        <!-- Controls & Operations Bar -->
+        <div class="controls-card">
+          <div class="controls-header">
+            <h3>Cluster Controls & Configuration</h3>
+            <span class="semantic-tag">Declarative State Binding</span>
+          </div>
+
+          <div class="controls-grid">
+            <!-- Region Selector -->
+            <div class="control-group">
+              <label for="region_select">Target Region</label>
+              <select id="region_select" class="form-control">
+                <option value="us-east-1">us-east-1 (N. Virginia)</option>
+                <option value="us-west-2">us-west-2 (Oregon)</option>
+                <option value="eu-central-1">eu-central-1 (Frankfurt)</option>
+                <option value="ap-northeast-1">ap-northeast-1 (Tokyo)</option>
+              </select>
+            </div>
+
+            <!-- Worker Nodes Capacity Input -->
+            <div class="control-group">
+              <label for="worker_nodes_input">Target Nodes Capacity</label>
+              <div class="number-stepper">
+                <input type="number" id="worker_nodes_input" class="form-control" value="8" min="1" max="32">
+                <span class="input-unit">instances</span>
+              </div>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="control-group">
+              <label for="filter_status">Filter Status</label>
+              <select id="filter_status" class="form-control">
+                <option value="all">All Statuses</option>
+                <option value="active">Active Only</option>
+                <option value="unhealthy">Unhealthy / Error Only</option>
+              </select>
+            </div>
+
+            <!-- Autoscaling Toggle Switch -->
+            <div class="control-group flex-row">
+              <div>
+                <label for="autoscaling_switch">Autoscaling</label>
+                <p class="control-desc">Dynamically scale instances</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="autoscaling_switch" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="control-group btn-group-flex">
+              <button id="deploy_modal_btn" class="btn btn-primary">
+                <span>🚀 Deploy Preset</span>
+              </button>
+              <button id="reset_filters_btn" class="btn btn-secondary">
+                <span>↺ Reset Filters</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Server Instances Table -->
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title">
+              <h3>Cluster Instances</h3>
+              <span class="count-badge" id="instance_count_badge">8 Instances</span>
+            </div>
+            <div class="table-actions">
+              <span id="active_filter_indicator" class="filter-indicator">Showing: All</span>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="server_table">
+              <thead>
+                <tr>
+                  <th>Instance ID</th>
+                  <th>Role</th>
+                  <th>Region</th>
+                  <th>Status</th>
+                  <th>CPU Load</th>
+                  <th>Memory</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="server_tbody">
+                <!-- Dynamically populated from state -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right: Voice AI Copilot HUD -->
+      <aside class="copilot-hud">
+        
+        <!-- HUD Header -->
+        <div class="hud-header">
+          <div class="hud-title">
+            <span class="ai-sparkle">✨</span>
+            <h2>Voice Copilot HUD</h2>
+          </div>
+          <span class="ai-mode-pill">UI-Aware</span>
+        </div>
+
+        <!-- Voice Interaction Hub -->
+        <div class="voice-hero-card">
+          <div class="waveform-container">
+            <canvas id="waveform_canvas" width="300" height="60"></canvas>
+          </div>
+
+          <div class="voice-controls">
+            <button id="mic_btn" class="mic-button" title="Click to Speak / Record Voice">
+              <div class="mic-inner">
+                <span id="mic_icon" class="mic-glyph">🎙️</span>
+              </div>
+              <span class="mic-ripple"></span>
+            </button>
+            <div class="voice-status-text">
+              <span id="voice_status_label">Tap mic to speak</span>
+              <small id="voice_sub_label">Or click a simulated prompt below</small>
+            </div>
+          </div>
+
+          <!-- Quick Simulated Voice Commands for Automated & Manual Testing -->
+          <div class="simulated-prompts">
+            <span class="sim-label">⚡ Simulated Voice Commands:</span>
+            <div class="prompt-chips">
+              <button class="chip-btn" data-command="Filter servers to show only active instances">
+                "Filter servers to active"
+              </button>
+              <button class="chip-btn" data-command="Switch to dark mode and scale worker nodes to 5">
+                "Dark mode & scale nodes to 5"
+              </button>
+              <button class="chip-btn" data-command="Open deployment configuration modal">
+                "Open deploy modal"
+              </button>
+              <button class="chip-btn" data-command="Filter unhealthy servers and switch region to eu-central">
+                "Show unhealthy & switch EU"
+              </button>
+              <button class="chip-btn" data-command="Reset all filters">
+                "Reset all filters"
+              </button>
+            </div>
+          </div>
+
+          <!-- Manual Text Fallback Prompt Input -->
+          <form id="text_prompt_form" class="text-prompt-form">
+            <input type="text" id="text_prompt_input" placeholder="Type voice command fallback..." autocomplete="off">
+            <button type="submit" id="send_prompt_btn" class="btn-send" title="Send Command">→</button>
+          </form>
+        </div>
+
+        <!-- Live STT Transcription Box -->
+        <div class="hud-box">
+          <div class="hud-box-header">
+            <span class="box-tag tag-stt">STT TRANSCRIPT</span>
+            <span id="stt_status_tag" class="status-tag">Ready</span>
+          </div>
+          <div class="stt-transcript-content" id="stt_transcript_text">
+            <em>Awaiting voice input...</em>
+          </div>
+        </div>
+
+        <!-- Agent Reasoning & Thoughts Box -->
+        <div class="hud-box">
+          <div class="hud-box-header">
+            <span class="box-tag tag-llm">AGENT REASONING</span>
+            <span class="status-tag">Pydantic Guided</span>
+          </div>
+          <div class="reasoning-content" id="agent_thought_text">
+            <em>Agent reasoning chain will appear here...</em>
+          </div>
+          <div class="spoken-speech-box" id="speech_output_container" style="display: none;">
+            <span class="speech-label">🔊 Spoken Output:</span>
+            <p id="speech_output_text"></p>
+          </div>
+        </div>
+
+        <!-- Structured Action Execution Stream -->
+        <div class="hud-box flex-grow">
+          <div class="hud-box-header">
+            <span class="box-tag tag-action">UI ACTIONS STREAM</span>
+            <span class="status-tag" id="action_count_tag">0 actions</span>
+          </div>
+          <div class="action-feed" id="action_feed_list">
+            <div class="empty-feed">No actions executed yet.</div>
+          </div>
+        </div>
+
+        <!-- Declarative ViewContext Live Inspector Toggle -->
+        <div class="hud-box collapsed-box">
+          <details id="view_context_details">
+            <summary class="hud-box-header pointer">
+              <span class="box-tag tag-ctx">DECLARATIVE VIEWCONTEXT (MCP)</span>
+              <span class="status-tag">Live JSON</span>
+            </summary>
+            <pre class="json-viewer" id="view_context_viewer">{}</pre>
+          </details>
+        </div>
+
+      </aside>
+    </main>
+
+    <!-- Modal: Deployment Preset Modal -->
+    <div id="deploy_modal" class="modal-overlay" aria-hidden="true" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span>🚀</span>
+            <h3>Deploy Production Cluster Preset</h3>
+          </div>
+          <button id="modal_close_btn" class="modal-close-btn" aria-label="Close Modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-description">Select a pre-validated configuration preset to dispatch across all active regions.</p>
+          
+          <div class="preset-options">
+            <label class="preset-option-card active">
+              <input type="radio" name="deploy_preset" value="ha_production" checked>
+              <div class="preset-info">
+                <strong>High-Availability Production</strong>
+                <span>8 Nodes, Multi-AZ replication, 99.99% SLA</span>
+              </div>
+            </label>
+            <label class="preset-option-card">
+              <input type="radio" name="deploy_preset" value="cost_optimized">
+              <div class="preset-info">
+                <strong>Cost-Optimized Staging</strong>
+                <span>3 Spot Instances, Auto-shutdown enabled</span>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="modal_cancel_btn" class="btn btn-secondary">Cancel</button>
+          <button id="modal_confirm_btn" class="btn btn-primary">Confirm & Deploy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast_container" class="toast-container"></div>
+
+  </div>
+
+  <!-- Audio Element for Streaming TTS Playback -->
+  <audio id="tts_audio_player" preload="auto"></audio>
+
+  <!-- JavaScript Modules -->
+  <script src="/js/view_context.js"></script>
+  <script src="/js/action_dispatcher.js"></script>
+  <script src="/js/audio_controller.js"></script>
+  <script src="/js/ws_client.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

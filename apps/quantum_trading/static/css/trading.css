@@ -1,0 +1,273 @@
+﻿/* FinTech Quantum Terminal - Cyberpunk Trading Theme */
+:root {
+  --font-main: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --bg-dark: #080b11;
+  --bg-panel: rgba(16, 22, 34, 0.75);
+  --bg-input: #151d2d;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-neon: rgba(16, 185, 129, 0.35);
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --green: #10b981;
+  --red: #f43f5e;
+  --cyan: #06b6d4;
+  --purple: #8b5cf6;
+  --gold: #f59e0b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  background-image: radial-gradient(at 10% 10%, rgba(16, 185, 129, 0.08) 0px, transparent 40%),
+                    radial-gradient(at 90% 90%, rgba(6, 182, 212, 0.06) 0px, transparent 40%);
+  min-height: 100vh;
+}
+
+.terminal-container {
+  display: flex;
+  flex-direction: column;
+  max-width: 1760px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem;
+  gap: 1rem;
+}
+
+/* Header */
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.quantum-badge {
+  background: linear-gradient(135deg, var(--green), var(--cyan));
+  color: #000;
+  font-weight: 800;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.tickers-bar {
+  display: flex;
+  gap: 1.25rem;
+}
+.ticker-item {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  display: flex;
+  gap: 0.35rem;
+}
+.ticker-up { color: var(--green); }
+.ticker-down { color: var(--red); }
+
+.portfolio-pill {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+.portfolio-pill strong { color: var(--gold); font-family: var(--font-mono); }
+
+/* Main Grid */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 440px;
+  gap: 1rem;
+  align-items: start;
+}
+
+/* Trading Panel */
+.trading-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tabs-header {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+.tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: var(--bg-panel);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.card {
+  background: var(--bg-panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.form-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.form-ctrl {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.55rem 0.75rem;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  outline: none;
+}
+.form-ctrl:focus { border-color: var(--green); }
+
+.btn-buy {
+  background: linear-gradient(135deg, var(--green), #059669);
+  color: #000;
+  font-weight: 700;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: transform 0.15s;
+}
+.btn-buy:hover { transform: translateY(-1px); filter: brightness(1.1); }
+
+/* Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  margin-top: 0.5rem;
+}
+.data-table th, .data-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.data-table th { color: var(--text-dim); font-size: 0.7rem; }
+
+/* Copilot HUD */
+.hud-panel {
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mic-hero {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mic-btn-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green), var(--cyan));
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+  transition: transform 0.2s;
+}
+.mic-btn-circle:hover { transform: scale(1.06); }
+.mic-btn-circle.recording { background: var(--red); box-shadow: 0 0 25px rgba(244, 63, 94, 0.8); }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+.chip {
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--green); color: var(--text-main); }
+
+.hud-box {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+}
+.tag { font-size: 0.65rem; font-weight: 700; color: var(--cyan); text-transform: uppercase; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal-content {
+  background: #111827;
+  border: 1px solid var(--green);
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
