@@ -177,14 +177,22 @@ export class VoiceCopilotClient {
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
+      const isUkrainian = /[іїєґІЇЄҐ]/.test(text);
       const isRussian = /[а-яёА-ЯЁ]/.test(text);
-      utterance.lang = isRussian ? 'ru-RU' : 'en-US';
+
+      if (isUkrainian) {
+        utterance.lang = 'uk-UA';
+      } else if (isRussian) {
+        utterance.lang = 'ru-RU';
+      } else {
+        utterance.lang = 'en-US';
+      }
       utterance.rate = 1.05;
       utterance.pitch = 1.0;
 
       const voices = window.speechSynthesis.getVoices();
-      const targetLang = isRussian ? 'ru' : 'en';
-      const bestVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLang));
+      const targetPrefix = isUkrainian ? 'uk' : (isRussian ? 'ru' : 'en');
+      const bestVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetPrefix));
       if (bestVoice) {
         utterance.voice = bestVoice;
       }
