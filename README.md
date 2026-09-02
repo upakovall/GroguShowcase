@@ -44,12 +44,12 @@ python run_all.py
 ## 🎙️ Sample Voice Commands to Test
 
 ### In Nexus Cloud Studio (Port 8000):
-- *"Переключи на светлую тему и масштабируй воркеры до 5"*
-- *"Отфильтруй упавшие сервера"*
-- *"Открой окно деплоя"*
+- *"Switch to light theme and scale workers to 5"*
+- *"Filter unhealthy servers"*
+- *"Open deployment modal"*
 
 ### In Quantum Trade Terminal (Port 8050):
-- *"Купи 2 биткоина с 5x плечом"*
-- *"Перейди на вкладку риск-менеджмента"*
-- *"Включи автохеджирование и поставь стоп лосс на 8 процентов"*
-- *"Купи 100 биткоинов"* *(Демонстрация MCP-валидатора: отклонит с предупреждением о лимите)*
+- *"Buy 2 Bitcoins with 5x leverage"*
+- *"Switch to risk management tab"*
+- *"Enable auto-hedging and set stop loss to 8 percent"*
+- *"Buy 100 Bitcoins"* *(MCP validator demonstration: will reject with a limit alert)*
