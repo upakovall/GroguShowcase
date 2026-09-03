@@ -514,7 +514,8 @@ export class AudioController {
     if (this.mediaStream) {
       try {
         this.mediaStream.getTracks().forEach((track) => track.stop());
-      } catch (e) {}\n      this.mediaStream = null;
+      } catch (e) {}
+      this.mediaStream = null;
     }
 
     if (this.audioContext && this.audioContext.state !== 'closed') {
