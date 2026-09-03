@@ -6,7 +6,7 @@
  * the decoupled VoiceCopilotClient SDK with client-side VAD.
  */
 
-import { VoiceCopilotClient, CopilotVoiceState } from '/sdk/voice_copilot_client.js';
+import { VoiceCopilotClient, CopilotVoiceState } from '/sdk/voice_copilot_client.js?v=2.0.1';
 
 class AppStore {
   constructor() {
