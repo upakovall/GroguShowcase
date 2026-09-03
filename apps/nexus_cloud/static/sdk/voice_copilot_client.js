@@ -315,9 +315,10 @@ export class VoiceCopilotClient {
         if (msg.agent_response) {
           this.onAgentResponse(msg.agent_response);
 
-          // Track pending speech for fallback if no synthesized WAV is streamed
-          this._pendingSpeechOutput = msg.agent_response.speech_output || null;
-          this._hasSynthesizedWav = false;
+          // Vocalize response aloud via natural speech synthesis
+          if (msg.agent_response.speech_output) {
+            this.speakNaturalVoice(msg.agent_response.speech_output);
+          }
 
           // Dispatch structured UI actions
           if (msg.agent_response.actions && msg.agent_response.actions.length > 0) {
@@ -340,10 +341,7 @@ export class VoiceCopilotClient {
 
       case 'AUDIO_RESPONSE':
         if (msg.audio_base64) {
-          this._hasSynthesizedWav = true;
           this.onAudioResponse(msg.audio_base64);
-          // Play backend synthesized WAV response; auto-resumes to LISTENING_SILENT upon completion
-          this.playAudioChime(msg.audio_base64);
         }
         break;
 

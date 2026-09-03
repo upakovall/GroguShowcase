@@ -396,6 +396,7 @@ export class AudioController {
 
       try {
         window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
         this.setVoiceState(CopilotVoiceState.SPEAKING);
 
         const utterance = new SpeechSynthesisUtterance(text);
@@ -414,7 +415,7 @@ export class AudioController {
 
         const voices = window.speechSynthesis.getVoices();
         const targetPrefix = isUkrainian ? 'uk' : (isRussian ? 'ru' : 'en');
-        const bestVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetPrefix));
+        const bestVoice = voices.find(v => v.lang.toLowerCase().replace('_', '-').startsWith(targetPrefix));
         if (bestVoice) {
           utterance.voice = bestVoice;
         }
@@ -428,6 +429,15 @@ export class AudioController {
 
         utterance.onend = onFinish;
         utterance.onerror = onFinish;
+
+        // Auto-resume timer safeguard for Chrome speech synthesis pauses
+        const resumeInterval = setInterval(() => {
+          if (!window.speechSynthesis.speaking) {
+            clearInterval(resumeInterval);
+          } else {
+            window.speechSynthesis.resume();
+          }
+        }, 250);
 
         window.speechSynthesis.speak(utterance);
       } catch (err) {
