@@ -1,9 +1,12 @@
 /**
- * Main Application Orchestrator for Grogu Cloud Studio.
+ * Main Application Orchestrator for Nexus Cloud Studio.
  * 
  * Manages reactive UI state, coordinates ViewContext synchronization,
- * HUD updates, and event listeners.
+ * HUD updates, and continuous conversational voice interactions using
+ * the decoupled VoiceCopilotClient SDK with client-side VAD.
  */
+
+import { VoiceCopilotClient, CopilotVoiceState } from '/sdk/voice_copilot_client.js';
 
 class AppStore {
   constructor() {
@@ -169,31 +172,73 @@ class AppStore {
 }
 
 
-// Application Core Initializer
+// Application Core Orchestrator
 class App {
   constructor() {
     this.store = new AppStore();
     this.viewContextMgr = new ViewContextManager();
     this.dispatcher = new ActionDispatcher(this.store);
-    this.ws = new WSClient('/ws/copilot');
-    this.audio = new AudioController(this.ws);
+
+    // Waveform rendering members
+    this.canvas = document.getElementById('waveform_canvas');
+    this.canvasCtx = this.canvas ? this.canvas.getContext('2d') : null;
+    this.currentVoiceState = CopilotVoiceState.IDLE;
+    this.currentRms = 0;
+    this.wavePhase = 0;
+
+    // Initialize decoupled SDK client with Client-Side VAD
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    this.copilot = new VoiceCopilotClient({
+      wsUrl: `${proto}//${window.location.host}/ws/copilot`,
+      continuousMode: true,
+      silenceThreshold: 0.015,
+      silenceTimeoutMs: 1500,
+      onStateChange: (state) => {
+        this.updateWsBadge(state);
+      },
+      onVoiceStateChange: (newState, oldState) => {
+        console.log(`[Nexus] VAD Voice State changed: ${oldState} -> ${newState}`);
+        this.updateVoiceStateUI(newState);
+      },
+      onVolumeLevel: (rms) => {
+        this.currentRms = rms;
+      },
+      onTranscription: (text, isFinal) => {
+        if (isFinal && text) {
+          this.appendChatMessage('user', text);
+        }
+      },
+      onAgentThinking: (text) => {
+        const label = document.getElementById('voice_status_label');
+        if (label && text) label.textContent = text;
+      },
+      onAgentResponse: (resp) => {
+        this.appendChatMessage('assistant', resp.speech_output || 'Command processed.', resp.thought, resp.actions);
+      },
+      onUIAction: (action) => {
+        this.dispatcher.dispatch(action);
+        this.syncViewContext();
+      },
+      onError: (err) => {
+        console.error('[Nexus] Voice Copilot error:', err);
+        this.store.showToast(`⚠️ Error: ${err.message || err}`);
+      }
+    });
   }
 
   init() {
-    console.log('[App] Initializing Grogu Voice AI Copilot Platform...');
+    console.log('[App] Initializing Nexus Cloud Studio with Continuous Voice Copilot...');
 
     // 1. Initial State Render
     this.store.render();
-    this.audio.drawIdleWaveform();
+    this.startWaveformVisualizer();
 
     // 2. Wire up UI Controls
     this.bindEvents();
 
-    // 3. Setup WebSocket Callbacks
-    this.setupWebSocket();
-
-    // 4. Connect WebSocket
-    this.ws.connect();
+    // 3. Connect SDK WebSocket
+    this.copilot.connect();
+    setTimeout(() => this.syncViewContext(), 500);
   }
 
   bindEvents() {
@@ -242,9 +287,17 @@ class App {
       this.store.resetFilters();
     });
 
-    // Mic Button
-    document.getElementById('mic_btn')?.addEventListener('click', () => {
-      this.audio.toggleRecording();
+    // Microphone Toggle Button (Starts / Stops Continuous Voice Session)
+    document.getElementById('mic_btn')?.addEventListener('click', async () => {
+      if (this.copilot.isRecording) {
+        this.copilot.stopListening();
+      } else {
+        try {
+          await this.copilot.startListening();
+        } catch (err) {
+          console.error('[Nexus] Error starting audio session:', err);
+        }
+      }
     });
 
     // Simulated Prompt Chip Buttons
@@ -252,7 +305,8 @@ class App {
       btn.addEventListener('click', () => {
         const cmd = btn.getAttribute('data-command');
         if (cmd) {
-          this.audio.simulateVoiceCommand(cmd);
+          this.appendChatMessage('user', cmd);
+          this.copilot.sendTextPrompt(cmd);
         }
       });
     });
@@ -264,7 +318,7 @@ class App {
       const text = input?.value.trim();
       if (text) {
         this.appendChatMessage('user', text);
-        this.submitTextPrompt(text);
+        this.copilot.sendTextPrompt(text);
         input.value = '';
       }
     });
@@ -273,6 +327,163 @@ class App {
     this.store.onStateChange(() => {
       this.syncViewContext();
     });
+  }
+
+  updateWsBadge(state) {
+    const dot = document.getElementById('ws_dot');
+    const text = document.getElementById('ws_status_text');
+    if (!dot || !text) return;
+
+    if (state === 'connected') {
+      dot.className = 'dot dot-green pulse-green';
+      text.textContent = 'WS 16kHz Connected';
+    } else if (state === 'connecting') {
+      dot.className = 'dot dot-amber';
+      text.textContent = 'Connecting...';
+    } else {
+      dot.className = 'dot dot-red';
+      text.textContent = 'Disconnected';
+    }
+  }
+
+  updateVoiceStateUI(newState) {
+    this.currentVoiceState = newState;
+    const micBtn = document.getElementById('mic_btn');
+    const badge = document.getElementById('voice_state_badge');
+    const label = document.getElementById('voice_status_label');
+
+    if (!micBtn) return;
+
+    // Reset modifier classes
+    micBtn.classList.remove('state-listening-silent', 'state-listening-speaking', 'state-processing', 'state-speaking', 'recording');
+
+    switch (newState) {
+      case CopilotVoiceState.LISTENING_SILENT:
+        micBtn.classList.add('state-listening-silent');
+        if (badge) {
+          badge.className = 'state-badge badge-listening';
+          badge.textContent = '🟢 LISTENING';
+        }
+        if (label) label.textContent = '🟢 Continuous Voice active: Listening... (Speak naturally)';
+        break;
+
+      case CopilotVoiceState.LISTENING_SPEAKING:
+        micBtn.classList.add('state-listening-speaking', 'recording');
+        if (badge) {
+          badge.className = 'state-badge badge-speaking-user';
+          badge.textContent = '🔴 STREAMING PCM';
+        }
+        if (label) label.textContent = '🎙️ Voice detected: Streaming 16kHz PCM chunks...';
+        break;
+
+      case CopilotVoiceState.PROCESSING:
+        micBtn.classList.add('state-processing');
+        if (badge) {
+          badge.className = 'state-badge badge-processing';
+          badge.textContent = '🟡 PROCESSING';
+        }
+        if (label) label.textContent = '⚡ Transcribing voice & reasoning over cluster state...';
+        break;
+
+      case CopilotVoiceState.SPEAKING:
+        micBtn.classList.add('state-speaking');
+        if (badge) {
+          badge.className = 'state-badge badge-speaking-ai';
+          badge.textContent = '🟣 AI SPEAKING';
+        }
+        if (label) label.textContent = '🔊 AI Copilot is vocalizing response...';
+        break;
+
+      case CopilotVoiceState.IDLE:
+      default:
+        if (badge) {
+          badge.className = 'state-badge badge-idle';
+          badge.textContent = '⚪ IDLE';
+        }
+        if (label) label.textContent = 'Tap microphone to start continuous voice conversation';
+        break;
+    }
+  }
+
+  startWaveformVisualizer() {
+    if (!this.canvasCtx || !this.canvas) return;
+
+    const draw = () => {
+      requestAnimationFrame(draw);
+
+      this.canvasCtx.fillStyle = 'rgba(17, 22, 34, 0.45)';
+      this.canvasCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+      const width = this.canvas.width;
+      const height = this.canvas.height;
+      const mid = height / 2;
+
+      this.canvasCtx.beginPath();
+      this.canvasCtx.lineWidth = 2.2;
+
+      if (this.currentVoiceState === CopilotVoiceState.IDLE) {
+        // Flat baseline
+        this.canvasCtx.strokeStyle = 'rgba(99, 102, 241, 0.25)';
+        this.canvasCtx.moveTo(0, mid);
+        this.canvasCtx.lineTo(width, mid);
+        this.canvasCtx.stroke();
+        return;
+      }
+
+      if (this.currentVoiceState === CopilotVoiceState.LISTENING_SILENT) {
+        // Subtle breathing sine wave
+        this.canvasCtx.strokeStyle = '#06b6d4';
+        this.wavePhase += 0.05;
+        for (let x = 0; x < width; x++) {
+          const y = mid + Math.sin(x * 0.04 + this.wavePhase) * 4;
+          if (x === 0) this.canvasCtx.moveTo(x, y);
+          else this.canvasCtx.lineTo(x, y);
+        }
+        this.canvasCtx.stroke();
+        return;
+      }
+
+      if (this.currentVoiceState === CopilotVoiceState.LISTENING_SPEAKING) {
+        // Dynamic RMS-scaled voice wave
+        this.canvasCtx.strokeStyle = '#f43f5e';
+        this.wavePhase += 0.24;
+        const amp = Math.max(6, Math.min(16, this.currentRms * 180));
+        for (let x = 0; x < width; x++) {
+          const y = mid + Math.sin(x * 0.08 + this.wavePhase) * amp * Math.sin(x * 0.02);
+          if (x === 0) this.canvasCtx.moveTo(x, y);
+          else this.canvasCtx.lineTo(x, y);
+        }
+        this.canvasCtx.stroke();
+        return;
+      }
+
+      if (this.currentVoiceState === CopilotVoiceState.PROCESSING) {
+        // Amber scanning wave
+        this.canvasCtx.strokeStyle = '#f59e0b';
+        this.wavePhase += 0.12;
+        for (let x = 0; x < width; x++) {
+          const y = mid + Math.sin(x * 0.06 + this.wavePhase) * 5;
+          if (x === 0) this.canvasCtx.moveTo(x, y);
+          else this.canvasCtx.lineTo(x, y);
+        }
+        this.canvasCtx.stroke();
+        return;
+      }
+
+      if (this.currentVoiceState === CopilotVoiceState.SPEAKING) {
+        // Violet AI speech wave
+        this.canvasCtx.strokeStyle = '#a855f7';
+        this.wavePhase += 0.18;
+        for (let x = 0; x < width; x++) {
+          const y = mid + Math.sin(x * 0.07 + this.wavePhase) * 8 * Math.cos(x * 0.03);
+          if (x === 0) this.canvasCtx.moveTo(x, y);
+          else this.canvasCtx.lineTo(x, y);
+        }
+        this.canvasCtx.stroke();
+      }
+    };
+
+    draw();
   }
 
   appendChatMessage(role, text, thought = null, actions = []) {
@@ -310,62 +521,6 @@ class App {
     feed.scrollTop = feed.scrollHeight;
   }
 
-  setupWebSocket() {
-    this.ws.on('open', () => {
-      this.syncViewContext();
-    });
-
-    this.ws.on('TRANSCRIPTION', (msg) => {
-      if (msg.is_final && msg.text) {
-        this.appendChatMessage('user', msg.text);
-      }
-    });
-
-    this.ws.on('AGENT_THINKING', (msg) => {
-      const statusLabel = document.getElementById('voice_status_label');
-      if (statusLabel && msg.text) {
-        statusLabel.textContent = msg.text;
-      }
-    });
-
-    this.ws.on('AGENT_RESPONSE', (msg) => {
-      const resp = msg.agent_response;
-      if (!resp) return;
-
-      // Append assistant bubble to Chat Stream
-      this.appendChatMessage('assistant', resp.speech_output || 'Command processed.', resp.thought, resp.actions);
-
-      // Vocalize Natural Human Voice
-      if (resp.speech_output) {
-        this.audio.speakNaturalVoice(resp.speech_output);
-      }
-
-      // Dispatch UIActions
-      if (resp.actions && resp.actions.length > 0) {
-        resp.actions.forEach(action => {
-          this.dispatcher.dispatch(action);
-        });
-
-        // Send ACK back to server
-        this.ws.send({
-          type: 'ACTION_ACK',
-          data: { executed_count: resp.actions.length, status: 'success' }
-        });
-      }
-    });
-
-    this.ws.on('AUDIO_RESPONSE', (msg) => {
-      if (msg.audio_base64) {
-        this.audio.playAudioResponse(msg.audio_base64);
-      }
-    });
-
-    this.ws.on('ERROR', (msg) => {
-      console.error('[App] Server error received:', msg.error);
-      this.store.showToast(`⚠️ Error: ${msg.error}`);
-    });
-  }
-
   syncViewContext() {
     const snapshot = this.viewContextMgr.generateSnapshot(this.store);
     
@@ -376,23 +531,7 @@ class App {
     }
 
     // Transmit ViewContext over WebSocket to MCP connector
-    if (this.ws.isConnected) {
-      this.ws.send({
-        type: 'VIEW_CONTEXT_UPDATE',
-        view_context: snapshot
-      });
-    }
-  }
-
-  submitTextPrompt(text) {
-    console.log('[App] Submitting text prompt:', text);
-    const transcriptEl = document.getElementById('stt_transcript_text');
-    if (transcriptEl) transcriptEl.textContent = `"${text}" (via text input)`;
-
-    this.ws.send({
-      type: 'TEXT_PROMPT',
-      text: text
-    });
+    this.copilot.syncViewContext(snapshot);
   }
 }
 

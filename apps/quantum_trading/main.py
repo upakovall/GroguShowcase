@@ -39,10 +39,13 @@ trader_mcp = MCPRegistry()
 # 2. Register Custom Risk & Safety Validator
 def risk_policy_validator(action: UIAction, ctx: ViewContext):
     """Enforces host financial risk policies."""
-    if action.target_id == "trade_amount_input":
-        amount = float(action.payload.get("value", 0))
-        if amount > 50.0:
-            return False, "Risk Policy Alert: Single transaction limit is 50.0 units."
+    if action.target_id == "trade_amount_input" and action.payload:
+        try:
+            amount = float(action.payload.get("value", 0))
+            if amount > 50.0:
+                return False, "Risk Policy Alert: Single transaction limit is 50.0 units."
+        except (ValueError, TypeError):
+            pass
     return True, None
 
 trader_mcp.register_action_validator(ActionType.SET_INPUT_VALUE.value, risk_policy_validator)
@@ -51,10 +54,17 @@ trader_mcp.register_action_validator(ActionType.SET_INPUT_VALUE.value, risk_poli
 def on_order_execute_hook(action: UIAction, ctx: ViewContext):
     """Server-side trade execution hook."""
     if action.target_id == "execute_trade_btn":
-        asset = ctx.state_summary.get("selected_asset", "BTC/USD")
-        order_type = ctx.state_summary.get("order_type", "MARKET_BUY")
-        amount = float(ctx.state_summary.get("trade_amount", 1.0))
-        leverage = int(ctx.state_summary.get("leverage", 1))
+        summary = ctx.state_summary if isinstance(ctx.state_summary, dict) else {}
+        asset = summary.get("selected_asset", "BTC/USD")
+        order_type = summary.get("order_type", "MARKET_BUY")
+        try:
+            amount = float(summary.get("trade_amount", 1.0))
+        except (ValueError, TypeError):
+            amount = 1.0
+        try:
+            leverage = int(summary.get("leverage", 1))
+        except (ValueError, TypeError):
+            leverage = 1
         order = trading_service.execute_order(asset, order_type, amount, leverage)
         return {"executed_order": order}
     return None

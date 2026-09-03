@@ -78,7 +78,15 @@ class ActionDispatcher {
 
   handleFilterTable(action) {
     const { payload } = action;
-    const status = payload.status || 'all';
+    const raw = (payload.status || payload.value || payload.filter || 'all').toLowerCase();
+    let status = 'all';
+    if (raw.includes('unhealthy') || raw.includes('неисправ') || raw.includes('неработ') || raw.includes('неактив') || raw.includes('error') || raw.includes('fail')) {
+      status = 'unhealthy';
+    } else if (raw.includes('active') || raw.includes('актив') || raw.includes('работа')) {
+      status = 'active';
+    } else {
+      status = 'all';
+    }
     this.appStore.setStatusFilter(status);
     return { success: true, message: `Status filter set to ${status}` };
   }
@@ -105,11 +113,17 @@ class ActionDispatcher {
       }
     }
     if (target_id === 'filter_status') {
-      const status = payload.value || payload.status;
-      if (status) {
-        this.appStore.setStatusFilter(status);
-        return { success: true, message: `Status set to ${status}` };
+      const raw = (payload.value || payload.status || 'all').toLowerCase();
+      let status = 'all';
+      if (raw.includes('unhealthy') || raw.includes('неисправ') || raw.includes('неработ') || raw.includes('неактив') || raw.includes('error') || raw.includes('fail')) {
+        status = 'unhealthy';
+      } else if (raw.includes('active') || raw.includes('актив') || raw.includes('работа')) {
+        status = 'active';
+      } else {
+        status = 'all';
       }
+      this.appStore.setStatusFilter(status);
+      return { success: true, message: `Status set to ${status}` };
     }
     return { success: false, message: `Unknown select target: ${target_id}` };
   }

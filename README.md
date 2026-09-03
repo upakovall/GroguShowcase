@@ -1,6 +1,6 @@
 # 🌐 Grogu Multi-Application Showcase Suite
 
-This repository showcases how the standalone **`grogu-copilot`** library powers **two completely distinct web platforms** without any hardcoded domain logic.
+This repository showcases how the standalone **`grogu-copilot`** library powers **two completely distinct web platforms** with **Continuous Voice Conversation (Client-Side VAD)** without any hardcoded domain logic or backend VAD CPU overhead.
 
 ---
 

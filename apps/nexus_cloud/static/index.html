@@ -195,6 +195,7 @@
           <div class="hud-title">
             <span class="ai-sparkle">✨</span>
             <h2>Voice Copilot HUD</h2>
+            <span id="voice_state_badge" class="state-badge badge-idle">⚪ IDLE</span>
           </div>
           <span class="ai-mode-pill">UI-Aware</span>
         </div>
@@ -211,7 +212,7 @@
             <div class="chat-stream-msg assistant">
               <div class="chat-msg-header">✨ Grogu AI Copilot <small style="opacity:0.6;">System Ready</small></div>
               <div class="chat-bubble-ai">
-                Hello! I am your Voice AI DevOps Copilot. You can speak commands in English, Ukrainian, or Russian, or click a quick prompt chip.
+                Hello! I am your Voice AI DevOps Copilot. You can speak commands continuously in English, Ukrainian, or Russian, or click a quick prompt chip.
               </div>
             </div>
           </div>
@@ -236,7 +237,7 @@
 
           <!-- Integrated Mic & Text Prompt Input Bar -->
           <form id="text_prompt_form" class="chat-stream-input-bar">
-            <button type="button" id="mic_btn" class="chat-mic-btn" title="Click to Speak / Record (16kHz PCM)">
+            <button type="button" id="mic_btn" class="chat-mic-btn" title="Click to Toggle Continuous Voice (16kHz PCM VAD)">
               <span id="mic_icon">🎙️</span>
             </button>
             <input type="text" id="text_prompt_input" class="chat-text-input" placeholder="Speak or type command..." autocomplete="off">
@@ -245,7 +246,7 @@
         </div>
 
         <div class="voice-status-text" style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">
-          <span id="voice_status_label">Tap microphone to speak (16kHz PCM)</span>
+          <span id="voice_status_label">Tap microphone to start continuous voice conversation</span>
         </div>
 
         <!-- Declarative ViewContext Live Inspector Toggle -->
@@ -310,8 +311,6 @@
   <!-- JavaScript Modules -->
   <script src="/js/view_context.js"></script>
   <script src="/js/action_dispatcher.js"></script>
-  <script src="/js/audio_controller.js"></script>
-  <script src="/js/ws_client.js"></script>
-  <script src="/js/app.js"></script>
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>

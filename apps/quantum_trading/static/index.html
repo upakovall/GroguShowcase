@@ -133,17 +133,25 @@
       <!-- Right Panel: Voice AI Copilot HUD -->
       <aside class="hud-panel">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3>🎙️ Voice AI Copilot Chat</h3>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <h3>🎙️ Voice AI Copilot</h3>
+            <span id="voice_state_badge" class="state-badge badge-idle">⚪ IDLE</span>
+          </div>
           <span id="ws_badge" style="font-size: 0.7rem; color: var(--cyan);">Connecting...</span>
         </div>
 
         <!-- Interactive Chat History Container -->
         <div class="chat-feed-container">
+          <!-- Live Waveform / Voice Activity Bar -->
+          <div class="quantum-waveform-bar">
+            <canvas id="quantum_waveform" width="360" height="28"></canvas>
+          </div>
+
           <div class="chat-messages" id="chat_messages">
             <div class="chat-msg assistant">
               <div class="chat-sender">✨ Grogu AI Copilot</div>
               <div class="chat-bubble">
-                Hello! I am your AI Voice Copilot. You can speak commands in English, Ukrainian, or Russian, or click a quick prompt below.
+                Hello! I am your AI Voice Copilot. You can speak commands continuously in English, Ukrainian, or Russian, or click a quick prompt below.
               </div>
             </div>
           </div>
@@ -158,13 +166,13 @@
 
           <!-- Bottom Input & Mic Bar -->
           <form id="chat_input_form" class="chat-input-bar" onsubmit="handleTextInput(event)">
-            <button type="button" id="mic_btn" class="mic-btn-circle" style="width: 36px; height: 36px; font-size: 1rem;" title="Hold to Speak (16kHz PCM)">🎙️</button>
+            <button type="button" id="mic_btn" class="mic-btn-circle" style="width: 38px; height: 38px; font-size: 1.1rem;" title="Click to Toggle Continuous Voice (16kHz PCM VAD)">🎙️</button>
             <input type="text" id="chat_text_input" class="chat-text-input" placeholder="Speak or type command..." autocomplete="off">
             <button type="submit" class="tab-btn" style="padding: 0.4rem 0.8rem; background: var(--green); color: #000; font-weight: 700;">Send</button>
           </form>
         </div>
 
-        <div id="mic_status_text" style="font-size: 0.75rem; color: var(--text-dim); text-align: center; margin-top: 0.2rem;">Tap mic to speak voice command</div>
+        <div id="mic_status_text" style="font-size: 0.75rem; color: var(--text-dim); text-align: center; margin-top: 0.2rem;">Tap mic to start continuous voice session</div>
       </aside>
 
     </main>
@@ -188,9 +196,91 @@
 
   <!-- ES6 Module using decoupled VoiceCopilotClient SDK -->
   <script type="module">
-    import { VoiceCopilotClient } from '/sdk/voice_copilot_client.js';
+    import { VoiceCopilotClient, CopilotVoiceState } from '/sdk/voice_copilot_client.js';
 
     let currentTab = 'trade';
+    let currentRms = 0;
+    let wavePhase = 0;
+    let currentVoiceState = CopilotVoiceState.IDLE;
+
+    // --- Waveform Canvas Visualizer ---
+    const canvas = document.getElementById('quantum_waveform');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+
+    function renderWaveform() {
+      if (!ctx || !canvas) return;
+      requestAnimationFrame(renderWaveform);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const width = canvas.width;
+      const height = canvas.height;
+      const mid = height / 2;
+
+      ctx.beginPath();
+      ctx.lineWidth = 2.0;
+
+      if (currentVoiceState === CopilotVoiceState.IDLE) {
+        // Flat idle line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.moveTo(0, mid);
+        ctx.lineTo(width, mid);
+        ctx.stroke();
+        return;
+      }
+
+      if (currentVoiceState === CopilotVoiceState.LISTENING_SILENT) {
+        // Subtle breathing sine wave
+        ctx.strokeStyle = '#06b6d4';
+        wavePhase += 0.05;
+        for (let x = 0; x < width; x++) {
+          const y = mid + Math.sin(x * 0.04 + wavePhase) * 3.5;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        return;
+      }
+
+      if (currentVoiceState === CopilotVoiceState.LISTENING_SPEAKING) {
+        // Active voice amplitude based on live RMS
+        ctx.strokeStyle = '#f43f5e';
+        wavePhase += 0.22;
+        const amp = Math.max(5, Math.min(13, currentRms * 160));
+        for (let x = 0; x < width; x++) {
+          const y = mid + Math.sin(x * 0.08 + wavePhase) * amp * Math.sin(x * 0.02);
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        return;
+      }
+
+      if (currentVoiceState === CopilotVoiceState.PROCESSING) {
+        // Amber scanning pulse
+        ctx.strokeStyle = '#f59e0b';
+        wavePhase += 0.12;
+        for (let x = 0; x < width; x++) {
+          const y = mid + Math.sin(x * 0.06 + wavePhase) * 4;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        return;
+      }
+
+      if (currentVoiceState === CopilotVoiceState.SPEAKING) {
+        // Violet AI speech vocalization waves
+        ctx.strokeStyle = '#a855f7';
+        wavePhase += 0.16;
+        for (let x = 0; x < width; x++) {
+          const y = mid + Math.sin(x * 0.07 + wavePhase) * 7.5 * Math.cos(x * 0.03);
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+    }
+    requestAnimationFrame(renderWaveform);
 
     window.switchTab = function(tab) {
       currentTab = tab;
@@ -342,16 +432,85 @@
       feed.scrollTop = feed.scrollHeight;
     }
 
-    // Initialize Decoupled VoiceCopilotClient SDK with auto-protocol WSS / WS
+    function updateVoiceStateUI(newState) {
+      currentVoiceState = newState;
+      const micBtn = document.getElementById('mic_btn');
+      const badge = document.getElementById('voice_state_badge');
+      const statusText = document.getElementById('mic_status_text');
+
+      if (!micBtn) return;
+
+      // Clear existing state modifier classes
+      micBtn.classList.remove('state-listening-silent', 'state-listening-speaking', 'state-processing', 'state-speaking', 'recording');
+
+      switch (newState) {
+        case CopilotVoiceState.LISTENING_SILENT:
+          micBtn.classList.add('state-listening-silent');
+          if (badge) {
+            badge.className = 'state-badge badge-listening';
+            badge.textContent = '🟢 LISTENING';
+          }
+          if (statusText) statusText.textContent = '🟢 Continuous Voice active: Listening... (Speak anytime)';
+          break;
+
+        case CopilotVoiceState.LISTENING_SPEAKING:
+          micBtn.classList.add('state-listening-speaking', 'recording');
+          if (badge) {
+            badge.className = 'state-badge badge-speaking-user';
+            badge.textContent = '🔴 STREAMING PCM';
+          }
+          if (statusText) statusText.textContent = '🎙️ Speech detected: Streaming 16kHz PCM chunks...';
+          break;
+
+        case CopilotVoiceState.PROCESSING:
+          micBtn.classList.add('state-processing');
+          if (badge) {
+            badge.className = 'state-badge badge-processing';
+            badge.textContent = '🟡 REASONING...';
+          }
+          if (statusText) statusText.textContent = '⚡ Transcribing voice & reasoning with LLM...';
+          break;
+
+        case CopilotVoiceState.SPEAKING:
+          micBtn.classList.add('state-speaking');
+          if (badge) {
+            badge.className = 'state-badge badge-speaking-ai';
+            badge.textContent = '🟣 AI SPEAKING';
+          }
+          if (statusText) statusText.textContent = '🔊 AI Copilot is speaking response...';
+          break;
+
+        case CopilotVoiceState.IDLE:
+        default:
+          if (badge) {
+            badge.className = 'state-badge badge-idle';
+            badge.textContent = '⚪ IDLE';
+          }
+          if (statusText) statusText.textContent = 'Tap mic to start continuous voice conversation';
+          break;
+      }
+    }
+
+    // Initialize Decoupled VoiceCopilotClient SDK with auto-protocol WSS / WS and client-side VAD
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const copilot = new VoiceCopilotClient({
       wsUrl: `${proto}//${window.location.host}/ws/copilot`,
+      continuousMode: true,
+      silenceThreshold: 0.015,
+      silenceTimeoutMs: 1500,
       onStateChange: (state) => {
         const badge = document.getElementById('ws_badge');
         if (badge) {
           badge.textContent = state === 'connected' ? '⚡ WS Connected' : state;
           badge.style.color = state === 'connected' ? 'var(--green)' : 'var(--cyan)';
         }
+      },
+      onVoiceStateChange: (newState, oldState) => {
+        console.log(`[Quantum] VAD Voice State changed: ${oldState} -> ${newState}`);
+        updateVoiceStateUI(newState);
+      },
+      onVolumeLevel: (rms) => {
+        currentRms = rms;
       },
       onTranscription: (text, isFinal) => {
         if (isFinal && text) {
@@ -364,8 +523,6 @@
       },
       onAgentResponse: (resp) => {
         appendChatMessage('assistant', resp.speech_output || 'Command executed.', resp.thought, resp.actions);
-        const status = document.getElementById('mic_status_text');
-        if (status) status.textContent = 'Ready for next voice or text command';
       },
       onUIAction: (action) => {
         // Apply mutations independently on host UI:
@@ -412,6 +569,9 @@
         }
 
         syncState();
+      },
+      onError: (err) => {
+        console.error('[Quantum] Voice Copilot error:', err);
       }
     });
 
@@ -457,22 +617,23 @@
       copilot.sendTextPrompt(text);
     };
 
-    // Mic button
+    // Toggle Continuous Voice Session on click
     document.getElementById('mic_btn').addEventListener('click', async () => {
       if (copilot.isRecording) {
         copilot.stopListening();
-        document.getElementById('mic_btn').classList.remove('recording');
-        document.getElementById('mic_status_text').textContent = 'Processing voice audio...';
       } else {
-        await copilot.startListening();
-        document.getElementById('mic_btn').classList.add('recording');
-        document.getElementById('mic_status_text').textContent = 'Listening (16kHz PCM)... Click to send';
+        try {
+          await copilot.startListening();
+        } catch (err) {
+          console.error('[Quantum] Failed to start continuous listening:', err);
+        }
       }
     });
 
+    // Simulated quick prompts
     window.simulateVoice = function(text) {
       appendChatMessage('user', text);
-      copilot.stopListening(text);
+      copilot.sendTextPrompt(text);
     };
   </script>
 </body>

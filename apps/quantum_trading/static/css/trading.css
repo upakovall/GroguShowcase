@@ -220,10 +220,97 @@ body {
   justify-content: center;
   font-size: 1.4rem;
   box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
-  transition: transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
-.mic-btn-circle:hover { transform: scale(1.06); }
-.mic-btn-circle.recording { background: var(--red); box-shadow: 0 0 25px rgba(244, 63, 94, 0.8); }
+.mic-btn-circle:hover { transform: scale(1.08); filter: brightness(1.15); }
+
+/* VAD State 1: LISTENING_SILENT (Subtle breathing pulse) */
+.mic-btn-circle.state-listening-silent {
+  background: linear-gradient(135deg, #059669, #0d9488);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+  animation: breathingListening 2.2s infinite ease-in-out;
+}
+
+@keyframes breathingListening {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+  50% { transform: scale(1.06); box-shadow: 0 0 28px rgba(6, 182, 212, 0.8); }
+}
+
+/* VAD State 2: LISTENING_SPEAKING (Active User Voice Stream) */
+.mic-btn-circle.state-listening-speaking,
+.mic-btn-circle.recording {
+  background: linear-gradient(135deg, var(--red), #be123c);
+  box-shadow: 0 0 30px rgba(244, 63, 94, 0.85);
+  animation: energeticVoicePulse 1.0s infinite ease-in-out;
+}
+
+@keyframes energeticVoicePulse {
+  0%, 100% { transform: scale(1.04); box-shadow: 0 0 20px rgba(244, 63, 94, 0.6); }
+  50% { transform: scale(1.14); box-shadow: 0 0 38px rgba(244, 63, 94, 1.0); }
+}
+
+/* VAD State 3: PROCESSING (Amber reasoning spinner) */
+.mic-btn-circle.state-processing {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.7);
+  animation: processingRotate 1.8s infinite linear;
+}
+
+@keyframes processingRotate {
+  0% { transform: rotate(0deg) scale(1.02); }
+  50% { transform: rotate(180deg) scale(1.08); }
+  100% { transform: rotate(360deg) scale(1.02); }
+}
+
+/* VAD State 4: SPEAKING (AI Vocal Response) */
+.mic-btn-circle.state-speaking {
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.8);
+  animation: speakingGlow 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes speakingGlow {
+  0% { transform: scale(1.02); box-shadow: 0 0 18px rgba(139, 92, 246, 0.5); }
+  100% { transform: scale(1.10); box-shadow: 0 0 36px rgba(99, 102, 241, 0.9); }
+}
+
+/* VAD State Badges */
+.state-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  transition: all 0.25s ease;
+}
+
+.badge-idle { background: rgba(255, 255, 255, 0.08); color: var(--text-dim); }
+.badge-listening { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.4); }
+.badge-speaking-user { background: rgba(244, 63, 94, 0.2); color: var(--red); border: 1px solid rgba(244, 63, 94, 0.5); }
+.badge-processing { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
+.badge-speaking-ai { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.5); }
+
+/* Quantum Waveform Bar */
+.quantum-waveform-bar {
+  width: 100%;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.quantum-waveform-bar canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 
 .chips {
   display: flex;
@@ -239,8 +326,9 @@ body {
   font-size: 0.7rem;
   color: var(--text-dim);
   cursor: pointer;
+  transition: all 0.15s ease;
 }
-.chip:hover { border-color: var(--green); color: var(--text-main); }
+.chip:hover { border-color: var(--green); color: var(--text-main); background: rgba(16, 185, 129, 0.1); }
 
 .hud-box {
   background: var(--bg-input);
