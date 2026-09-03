@@ -535,8 +535,16 @@ class App {
   }
 }
 
-// Instantiate global app instance on DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-  window.app = new App();
-  window.app.init();
-});
+// Instantiate global app instance safely across all browser load states
+function startApp() {
+  if (!window.app) {
+    window.app = new App();
+    window.app.init();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
