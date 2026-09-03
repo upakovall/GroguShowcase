@@ -573,14 +573,18 @@
       onError: (err) => {
         console.error('[Quantum] Voice Copilot error:', err);
       }
-    });
-
     function syncState() {
-      copilot.syncViewContext(generateViewContext());
+      if (typeof copilot !== 'undefined' && copilot && typeof copilot.syncViewContext === 'function') {
+        try {
+          copilot.syncViewContext(generateViewContext());
+        } catch (e) {
+          console.debug('[Quantum] SyncViewContext deferred:', e);
+        }
+      }
     }
 
     copilot.connect();
-    setTimeout(syncState, 400);
+    setTimeout(syncState, 200);
 
     // Event listeners
     document.getElementById('asset_select').addEventListener('change', syncState);
