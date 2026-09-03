@@ -7,7 +7,7 @@
  * ZERO DOM/CSS TREE SCRAPING: Emits purely declarative semantic tokens.
  */
 
-class ViewContextManager {
+export class ViewContextManager {
   constructor() {
     this.screenId = 'cloud_dashboard';
     this.title = 'Nexus Cloud Studio // Cluster Infrastructure';

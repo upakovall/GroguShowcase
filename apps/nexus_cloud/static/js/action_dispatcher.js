@@ -5,7 +5,7 @@
  * to the application store. Operates without any DOM tree parsing or CSS selector scraping.
  */
 
-class ActionDispatcher {
+export class ActionDispatcher {
   constructor(appStore) {
     this.appStore = appStore;
     this.actionHistory = [];
@@ -88,7 +88,7 @@ class ActionDispatcher {
       status = 'all';
     }
     this.appStore.setStatusFilter(status);
-    return { success: true, message: `Status filter set to ${status}` };
+    return { success: true, message: `Updated active filter to ${filterValue}` };
   }
 
   handleSetInputValue(action) {
