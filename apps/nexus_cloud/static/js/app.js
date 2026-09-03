@@ -6,9 +6,9 @@
  * the decoupled VoiceCopilotClient SDK with client-side VAD.
  */
 
-import { ViewContextManager } from './view_context.js?v=2.0.3';
-import { ActionDispatcher } from './action_dispatcher.js?v=2.0.3';
-import { VoiceCopilotClient, CopilotVoiceState } from '/sdk/voice_copilot_client.js?v=2.0.3';
+import { ViewContextManager } from './view_context.js?v=2.0.4';
+import { ActionDispatcher } from './action_dispatcher.js?v=2.0.4';
+import { VoiceCopilotClient, CopilotVoiceState } from '/sdk/voice_copilot_client.js?v=2.0.4';
 
 class AppStore {
   constructor() {

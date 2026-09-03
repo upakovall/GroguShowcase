@@ -240,8 +240,33 @@ export class AudioController {
       this.onVolumeLevel(rms);
     } catch (e) {}
 
-    // When AI is SPEAKING or backend is PROCESSING, discard mic input to prevent acoustic feedback
-    if (this.voiceState === CopilotVoiceState.SPEAKING || this.voiceState === CopilotVoiceState.PROCESSING) {
+    // Real-Time Conversational Barge-In: If user speaks while AI is speaking, interrupt immediately!
+    if (this.voiceState === CopilotVoiceState.SPEAKING) {
+      if (rms >= this.silenceThreshold * 1.3) {
+        console.log('[AudioController] 🎙️ Barge-in detected! User interrupted AI speech.');
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        if (this.audioPlayer) {
+          try {
+            this.audioPlayer.pause();
+            this.audioPlayer.currentTime = 0;
+          } catch (e) {}
+        }
+        this.setVoiceState(CopilotVoiceState.LISTENING_SPEAKING);
+        this.lastSpeechTimestamp = Date.now();
+        const pcm16 = this.resampler.process(inputFloat32);
+        const pcmBuffer = pcm16.buffer;
+        const preSpeechChunks = this._flushPreSpeechBuffer();
+        try {
+          this.onSpeechStart(preSpeechChunks);
+          this.onAudioChunk(pcmBuffer);
+        } catch (e) {}
+      }
+      return;
+    }
+
+    if (this.voiceState === CopilotVoiceState.PROCESSING) {
       return;
     }
 

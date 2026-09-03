@@ -7,10 +7,10 @@
  * and zero-DOM-scraping declarative ViewContext synchronization.
  */
 
-import { AudioController, CopilotVoiceState } from './audio_controller.js?v=2.0.3';
-import { AudioResampler } from './audio_resampler.js?v=2.0.3';
+import { AudioController, CopilotVoiceState } from './audio_controller.js?v=2.0.4';
+import { AudioResampler } from './audio_resampler.js?v=2.0.4';
 
-export { CopilotVoiceState } from './audio_controller.js?v=2.0.3';
+export { CopilotVoiceState } from './audio_controller.js?v=2.0.4';
 
 export class VoiceCopilotClient {
   /**
